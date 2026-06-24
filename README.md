@@ -1,0 +1,2 @@
+# degenpad
+Solana memecoin launchpad
