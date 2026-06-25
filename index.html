@@ -2,558 +2,505 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DegenSad — Rug</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
-<!-- ═══════════════════════════════════════════════════════
-     PRIVY SETUP (React + Privy embedded wallet)
-     Pour la production, remplace ce fichier par ton bundle React:
-
-     npm install @privy-io/react-auth @solana/web3.js
-     
-     Puis dans ton App.jsx:
-     import { PrivyProvider, usePrivy, useSolanaWallets } from '@privy-io/react-auth';
-     
-     <PrivyProvider
-       appId="YOUR_PRIVY_APP_ID"
-       config={{
-         loginMethods: ['email','google','twitter','discord','wallet'],
-         embeddedWallets: { createOnLogin: 'users-without-wallets', chain: 'solana' },
-         appearance: { theme: 'dark', accentColor: '#7c3aed' }
-       }}
-     >
-       <App />
-     </PrivyProvider>
-
-     API calls Privy:
-       const { login, logout, user, authenticated } = usePrivy();
-       const { wallets } = useSolanaWallets();
-       const wallet = wallets[0]; // embedded Solana wallet
-       await wallet.sendTransaction(transaction, connection);
-     
-     Ce fichier HTML vanilla simule parfaitement le comportement.
-     Remplace les fonctions privyLogin/privyLogout/privySend par les hooks réels.
-═══════════════════════════════════════════════════════ -->
 <style>
 :root {
-  --bg:          #0a0a0f;
-  --panel:       #0f0f1a;
-  --panel2:      #14142a;
-  --border:      #1e1e35;
-  --border2:     #28284a;
-
-  --violet:      #7c3aed;
-  --violet-dim:  rgba(124,58,237,0.12);
-  --violet-glow: rgba(124,58,237,0.4);
-
-  --red:         #e53e3e;
-  --red-dim:     rgba(229,62,62,0.12);
-  --red-glow:    rgba(229,62,62,0.35);
-
-  --green:       #22c55e;
-  --green-dim:   rgba(34,197,94,0.1);
-  --green-glow:  rgba(34,197,94,0.35);
-
-  --gold:        #d4a847;
-  --gold-dim:    rgba(212,168,71,0.1);
-
-  --text:        #e2deff;
-  --muted:       #5a5480;
-  --muted2:      #2e2b52;
-
+  --bg:      #0d0d14;
+  --panel:   #13131f;
+  --panel2:  #1a1a2e;
+  --border:  #1f1f35;
+  --border2: #2a2a45;
+  --violet:  #7c3aed;
+  --violet-g:rgba(124,58,237,.35);
+  --red:     #e53e3e;
+  --red-g:   rgba(229,62,62,.3);
+  --green:   #22c55e;
+  --green-g: rgba(34,197,94,.3);
+  --gold:    #d4a847;
+  --text:    #ddd8ff;
+  --muted:   #4a4470;
+  --muted2:  #252240;
   --font: 'Syne', sans-serif;
   --mono: 'DM Mono', monospace;
-  --r: 10px; --r2: 6px;
-
-  --candle-up:   #22c55e;
-  --candle-dn:   #e53e3e;
 }
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; overflow: hidden; }
-body { font-family: var(--font); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
-::-webkit-scrollbar { width: 3px; }
-::-webkit-scrollbar-track { background: var(--panel); }
-::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font);-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:var(--panel)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 
 /* ── NAV ── */
-.nav {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 18px; height: 52px;
-  background: var(--panel); border-bottom: 1px solid var(--border);
-  position: relative; z-index: 200;
+.nav{
+  height:48px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;background:var(--panel);border-bottom:1px solid var(--border);
+  flex-shrink:0;z-index:100;
 }
-.logo {
-  font-size: 19px; font-weight: 800; letter-spacing: -0.5px;
-  background: linear-gradient(135deg, #a78bfa, var(--violet), var(--red));
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  display: flex; align-items: center; gap: 8px;
-}
-.logo-dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--red); box-shadow: 0 0 10px var(--red-glow);
-  animation: blink 2s infinite; flex-shrink: 0; -webkit-text-fill-color: initial;
-}
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+.logo{font-size:18px;font-weight:800;letter-spacing:-.5px;
+  background:linear-gradient(135deg,#a78bfa,var(--violet));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  display:flex;align-items:center;gap:7px}
+.logo-dot{width:6px;height:6px;border-radius:50%;background:var(--red);
+  box-shadow:0 0 8px var(--red-g);animation:blink 2s infinite;-webkit-text-fill-color:initial}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 
-/* Round history pills */
-.round-history {
-  display: flex; align-items: center; gap: 5px; flex: 1; overflow: hidden; margin: 0 20px;
+/* History mini-charts row */
+.history-row{
+  display:flex;gap:6px;overflow:hidden;flex:1;margin:0 16px;align-items:center;
 }
-.rh-pill {
-  padding: 3px 8px; border-radius: 4px; font-family: var(--mono);
-  font-size: 11px; font-weight: 500; white-space: nowrap; flex-shrink: 0;
-  border: 1px solid transparent;
+.hist-box{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:var(--panel2);border:1px solid var(--border);border-radius:6px;
+  padding:3px 8px;cursor:pointer;transition:border-color .15s;flex-shrink:0;
+  min-width:56px;gap:2px;
 }
-.rh-pill.high { background: rgba(34,197,94,.12); border-color: rgba(34,197,94,.25); color: var(--green); }
-.rh-pill.mid  { background: rgba(212,168,71,.1);  border-color: rgba(212,168,71,.2);  color: var(--gold); }
-.rh-pill.low  { background: rgba(229,62,62,.1);   border-color: rgba(229,62,62,.2);   color: var(--red); }
+.hist-box:hover{border-color:var(--border2)}
+.hist-canvas{display:block}
+.hist-mult{font-family:var(--mono);font-size:10px;font-weight:500;line-height:1}
+.hist-mult.high{color:var(--green)} .hist-mult.mid{color:var(--gold)} .hist-mult.low{color:var(--red)}
 
-.nav-right { display: flex; align-items: center; gap: 8px; }
-.balance-pill {
-  display: flex; align-items: center; gap: 5px;
-  background: var(--panel2); border: 1px solid var(--border2);
-  border-radius: 20px; padding: 4px 12px; font-family: var(--mono); font-size: 12px;
-}
-.bp-val { color: var(--gold); font-weight: 500; }
-.btn {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 7px 14px; border-radius: var(--r2); font-size: 13px;
-  font-weight: 700; cursor: pointer; border: none; font-family: var(--font);
-  transition: all .15s; white-space: nowrap;
-}
-.btn-primary { background: var(--violet); color: #fff; box-shadow: 0 0 18px var(--violet-glow); }
-.btn-primary:hover { background: #6d28d9; transform: translateY(-1px); }
-.btn-ghost { background: var(--panel2); border: 1px solid var(--border2); color: var(--text); }
-.btn-ghost:hover { border-color: var(--violet); color: #a78bfa; }
+.nav-right{display:flex;align-items:center;gap:8px}
+.bal-pill{display:flex;align-items:center;gap:5px;background:var(--panel2);
+  border:1px solid var(--border2);border-radius:20px;padding:4px 12px;
+  font-family:var(--mono);font-size:12px}
+.bal-val{color:var(--gold);font-weight:500}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;
+  border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;border:none;
+  font-family:var(--font);transition:all .15s;white-space:nowrap}
+.btn-primary{background:var(--violet);color:#fff;box-shadow:0 0 16px var(--violet-g)}
+.btn-primary:hover{background:#6d28d9;transform:translateY(-1px)}
+.btn-ghost{background:var(--panel2);border:1px solid var(--border2);color:var(--text)}
+.btn-ghost:hover{border-color:var(--violet);color:#a78bfa}
 
-/* ── LAYOUT ── */
-.app {
-  display: grid;
-  grid-template-columns: 1fr 280px;
-  height: calc(100vh - 52px);
+/* ── MAIN LAYOUT: chat | game | players ── */
+.main{
+  display:grid;
+  grid-template-columns:280px 1fr 220px;
+  height:calc(100vh - 48px);
+  overflow:hidden;
 }
+
+/* ── CHAT LEFT ── */
+.chat-panel{
+  background:var(--panel);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.chat-header{
+  padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.online-dot{width:7px;height:7px;border-radius:50%;background:var(--green);
+  box-shadow:0 0 6px var(--green-g);display:inline-block;margin-right:5px}
+.online-label{font-size:12px;font-weight:600;color:var(--text)}
+.online-count{font-size:11px;color:var(--muted)}
+.chat-icons{display:flex;gap:6px}
+.chat-icon{width:26px;height:26px;border-radius:50%;background:var(--panel2);
+  border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
+  font-size:12px;cursor:pointer;color:var(--muted);transition:all .15s}
+.chat-icon:hover{border-color:var(--violet);color:#a78bfa}
+
+.chat-messages{flex:1;overflow-y:auto;padding:8px 4px;display:flex;flex-direction:column;gap:2px}
+.chat-msg{display:flex;gap:8px;padding:5px 8px;border-radius:6px;transition:background .1s}
+.chat-msg:hover{background:var(--panel2)}
+.cm-avatar{width:28px;height:28px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:13px;
+  background:var(--muted2)}
+.cm-body{flex:1;min-width:0}
+.cm-name{font-size:11px;font-weight:700;color:#a78bfa;margin-bottom:2px}
+.cm-text{font-size:12px;color:var(--text);line-height:1.4;word-break:break-word}
+
+.chat-input-wrap{
+  padding:10px;border-top:1px solid var(--border);flex-shrink:0;
+}
+.chat-inp-row{display:flex;gap:6px}
+.chat-inp{
+  flex:1;background:var(--panel2);border:1px solid var(--border2);
+  border-radius:6px;padding:8px 10px;color:var(--text);font-size:12px;
+  font-family:var(--font);transition:border-color .15s;
+}
+.chat-inp:focus{outline:none;border-color:var(--violet)}
+.chat-inp::placeholder{color:var(--muted)}
+.chat-send{padding:8px 12px;background:var(--violet);border:none;border-radius:6px;
+  color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font)}
+.chat-connect-note{font-size:10px;color:var(--muted);text-align:center;padding:6px 0}
 
 /* ── GAME CENTER ── */
-.game-center {
-  display: flex; flex-direction: column; background: var(--bg); overflow: hidden;
-}
+.game-center{display:flex;flex-direction:column;overflow:hidden;background:var(--bg);padding:10px}
 
-/* Chart area */
-.chart-wrap {
-  flex: 1; position: relative; min-height: 0;
+/* Chart box */
+.chart-box{
+  flex:1;position:relative;
+  background:var(--panel);border:1px solid var(--border);border-radius:10px;
+  overflow:hidden;min-height:0;
 }
-#rugCanvas {
-  width: 100%; height: 100%; display: block;
-}
+#rugCanvas{display:block;width:100%;height:100%}
 
-/* Overlay messages */
-.rug-overlay {
-  position: absolute; inset: 0;
-  display: none; align-items: center; justify-content: center;
-  flex-direction: column; gap: 8px; pointer-events: none;
+/* Mult badge — inside chart top-right */
+.mult-badge{
+  position:absolute;top:12px;right:14px;
+  font-family:var(--mono);font-size:26px;font-weight:500;
+  transition:color .2s;pointer-events:none;
 }
-.rug-overlay.show { display: flex; }
-
-.rugged-text {
-  font-family: var(--font); font-weight: 800;
-  font-size: clamp(48px, 8vw, 96px);
-  color: rgba(180, 20, 20, 0.85);
-  text-shadow: 0 0 60px rgba(229,62,62,.4);
-  letter-spacing: -2px; line-height: 1;
-  animation: ruggedAnim .35s ease;
-  user-select: none;
-}
-@keyframes ruggedAnim { 0%{transform:scale(1.3);opacity:0} 100%{transform:scale(1);opacity:1} }
-
-.thanks-text {
-  font-family: var(--font); font-size: 18px; font-weight: 700;
-  color: rgba(200,200,255,0.75); letter-spacing: 0.5px;
-}
-.final-mult-text {
-  font-family: var(--mono); font-size: 28px; font-weight: 500;
-  color: rgba(229,62,62,0.9); margin-top: 4px;
-}
+.mult-badge.run{color:var(--green);text-shadow:0 0 20px var(--green-g)}
+.mult-badge.crash{color:var(--red);text-shadow:0 0 20px var(--red-g)}
+.mult-badge.wait{color:var(--muted)}
 
 /* Countdown overlay */
-.countdown-overlay {
-  position: absolute; inset: 0;
-  display: none; align-items: center; justify-content: center;
-  flex-direction: column; gap: 12px; pointer-events: none;
+.cd-overlay{
+  position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+  flex-direction:column;gap:8px;pointer-events:none;
+  background:rgba(13,13,20,.6);
 }
-.countdown-overlay.show { display: flex; }
-.cd-label { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; }
-.cd-num {
-  font-family: var(--mono); font-size: 56px; font-weight: 500;
-  color: var(--text); line-height: 1;
-  animation: cdPulse .9s ease infinite;
-}
-@keyframes cdPulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.cd-overlay.show{display:flex}
+.cd-lbl{font-size:11px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);font-weight:700}
+.cd-num{font-family:var(--mono);font-size:64px;font-weight:500;color:var(--text);line-height:1;
+  animation:cdp .9s ease infinite}
+@keyframes cdp{0%,100%{opacity:1}50%{opacity:.3}}
 
-/* Multiplier live badge */
-.mult-badge {
-  position: absolute; top: 14px; left: 20px;
-  font-family: var(--mono); font-size: 28px; font-weight: 500;
-  transition: color .2s, text-shadow .2s;
+/* Rugged overlay */
+.rug-overlay{
+  position:absolute;inset:0;display:none;
+  align-items:center;justify-content:center;flex-direction:column;gap:6px;
+  pointer-events:none;
 }
-.mult-badge.running { color: var(--green); text-shadow: 0 0 24px var(--green-glow); }
-.mult-badge.crashed { color: var(--red); text-shadow: 0 0 24px var(--red-glow); }
-.mult-badge.waiting { color: var(--muted); }
+.rug-overlay.show{display:flex}
+.rug-word{
+  font-family:var(--font);font-weight:800;
+  font-size:clamp(52px,7vw,90px);
+  color:rgba(200,20,20,.88);
+  text-shadow:0 2px 60px rgba(229,62,62,.5);
+  letter-spacing:-1px;animation:rugIn .3s ease;
+}
+@keyframes rugIn{0%{transform:scale(1.25);opacity:0}100%{transform:scale(1);opacity:1}}
+.rug-thanks{font-size:17px;font-weight:700;color:rgba(200,200,255,.7)}
+.rug-mult{font-family:var(--mono);font-size:30px;font-weight:500;color:rgba(229,62,62,.9);margin-top:2px}
 
-/* ── CONTROLS BAR ── */
-.controls-bar {
-  background: var(--panel); border-top: 1px solid var(--border);
-  padding: 12px 16px; display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+/* ── CONTROLS BOTTOM ── */
+.controls{
+  flex-shrink:0;background:var(--panel);border:1px solid var(--border);
+  border-radius:10px;margin-top:8px;padding:12px 14px;
+  display:grid;grid-template-columns:auto auto auto 1fr;gap:0;align-items:center;
 }
-.cb-group { display: flex; flex-direction: column; gap: 4px; }
-.cb-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--muted); font-weight: 700; }
-.cb-inp-row { display: flex; align-items: center; gap: 6px; }
-.cb-inp-wrap {
-  display: flex; align-items: center; background: var(--panel2);
-  border: 1px solid var(--border2); border-radius: var(--r2); overflow: hidden;
-  transition: border-color .15s; height: 36px;
+.ctrl-section{padding:0 16px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:5px}
+.ctrl-section:first-child{padding-left:0}
+.ctrl-section:last-child{border-right:none;padding-right:0}
+.ctrl-label{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);font-weight:700}
+.ctrl-inp-row{display:flex;align-items:center;gap:5px}
+.ctrl-inp-box{
+  display:flex;align-items:center;background:var(--panel2);
+  border:1px solid var(--border2);border-radius:5px;overflow:hidden;height:34px;
+  transition:border-color .15s;
 }
-.cb-inp-wrap:focus-within { border-color: var(--violet); }
-.cb-inp {
-  width: 90px; background: none; border: none; padding: 0 10px;
-  color: var(--text); font-size: 14px; font-family: var(--mono); font-weight: 500;
+.ctrl-inp-box:focus-within{border-color:var(--violet)}
+.ctrl-inp{
+  background:none;border:none;padding:0 8px;
+  color:var(--text);font-size:14px;font-family:var(--mono);font-weight:500;width:80px;
 }
-.cb-inp:focus { outline: none; }
-.cb-unit { padding: 0 10px; font-size: 11px; color: var(--muted); }
-.qbtns { display: flex; gap: 3px; }
-.qb {
-  padding: 4px 7px; background: var(--panel2); border: 1px solid var(--border);
-  border-radius: 4px; color: var(--muted); font-size: 11px; font-weight: 600;
-  cursor: pointer; font-family: var(--mono); transition: all .12s;
-}
-.qb:hover { border-color: var(--violet); color: #a78bfa; }
+.ctrl-inp:focus{outline:none}
+.ctrl-unit{padding:0 8px;font-size:11px;color:var(--muted);flex-shrink:0}
+.qbtns{display:flex;gap:3px}
+.qb{padding:4px 7px;background:var(--panel2);border:1px solid var(--border);
+  border-radius:4px;color:var(--muted);font-size:11px;font-weight:600;
+  cursor:pointer;font-family:var(--mono);transition:all .12s}
+.qb:hover{border-color:var(--violet);color:#a78bfa}
 
-.cb-divider { width: 1px; background: var(--border); align-self: stretch; margin: 0 4px; }
+.auto-row{display:flex;align-items:center;gap:5px}
+.auto-lbl{font-size:11px;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:4px}
+input[type=checkbox]{accent-color:var(--violet);width:13px;height:13px}
 
-/* Cashout auto row */
-.auto-row { display: flex; align-items: center; gap: 6px; }
-.auto-label { font-size: 11px; color: var(--muted); cursor: pointer; display: flex; align-items: center; gap: 4px; }
-input[type=checkbox] { accent-color: var(--violet); }
+.pot-val{font-family:var(--mono);font-size:16px;color:var(--gold)}
+.pot-sub{font-size:10px;color:var(--muted)}
 
-/* Action button */
-.action-btn {
-  min-width: 160px; height: 52px; border-radius: var(--r2); font-size: 15px;
-  font-weight: 800; cursor: pointer; border: none; font-family: var(--font);
-  transition: all .15s; display: flex; align-items: center; justify-content: center;
-  gap: 6px; margin-left: auto;
+/* BUY / SELL buttons */
+.buy-sell{display:flex;gap:8px;align-items:center;justify-content:flex-end}
+.buy-btn,.sell-btn{
+  height:52px;min-width:100px;border-radius:7px;font-size:16px;font-weight:800;
+  cursor:pointer;border:none;font-family:var(--font);transition:all .15s;
+  display:flex;align-items:center;justify-content:center;gap:5px;
 }
-.action-btn.waiting { background: var(--panel2); color: var(--muted); cursor: default; border: 1px solid var(--border2); }
-.action-btn.bet     { background: var(--violet); color: #fff; box-shadow: 0 0 20px var(--violet-glow); }
-.action-btn.bet:hover { background: #6d28d9; transform: translateY(-1px); }
-.action-btn.cashout {
-  background: linear-gradient(135deg, var(--green), #16a34a); color: #fff;
-  box-shadow: 0 0 24px var(--green-glow);
-  animation: pulseGreen .7s ease infinite;
-}
-@keyframes pulseGreen { 0%,100%{box-shadow:0 0 20px var(--green-glow)} 50%{box-shadow:0 0 40px rgba(34,197,94,.7)} }
-.action-btn:disabled { opacity: .4; cursor: not-allowed; animation: none; transform: none; }
+.buy-btn{background:linear-gradient(135deg,#16a34a,var(--green));color:#fff;
+  box-shadow:0 0 18px var(--green-g)}
+.buy-btn:hover{transform:translateY(-1px);box-shadow:0 0 28px var(--green-g)}
+.buy-btn.cashout{animation:pgreen .7s ease infinite}
+@keyframes pgreen{0%,100%{box-shadow:0 0 18px var(--green-g)}50%{box-shadow:0 0 36px rgba(34,197,94,.7)}}
+.buy-btn.waiting{background:var(--panel2);color:var(--muted);cursor:default;
+  border:1px solid var(--border2);box-shadow:none;animation:none}
+.buy-btn:disabled{opacity:.4;cursor:not-allowed;animation:none;transform:none}
+.sell-btn{background:linear-gradient(135deg,#991b1b,var(--red));color:#fff;
+  box-shadow:0 0 18px var(--red-g)}
+.sell-btn:hover{transform:translateY(-1px)}
+.sell-btn:disabled{opacity:.3;cursor:not-allowed;transform:none}
 
-/* ── SIDEBAR RIGHT ── */
-.sidebar-r {
-  background: var(--panel); border-left: 1px solid var(--border);
-  display: flex; flex-direction: column; overflow: hidden;
+/* ── PLAYERS RIGHT ── */
+.players-panel{
+  background:var(--panel);border-left:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;
 }
-.sr-header {
-  padding: 12px 14px; border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+.pp-header{
+  padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0;
+  display:flex;align-items:center;justify-content:space-between;
 }
-.sr-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); font-weight: 700; }
-.sr-round { font-family: var(--mono); font-size: 11px; color: var(--muted2); }
+.pp-title{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);font-weight:700}
+.pp-round{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.players-list{flex:1;overflow-y:auto;padding:4px 0}
+.pl-row{
+  display:grid;grid-template-columns:28px 1fr auto auto;
+  align-items:center;gap:6px;padding:6px 10px;
+  border-bottom:1px solid rgba(31,31,53,.5);transition:background .1s;
+}
+.pl-row:hover{background:var(--panel2)}
+.pl-av{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:12px;flex-shrink:0;background:var(--muted2)}
+.pl-name{font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pl-amt{font-family:var(--mono);font-size:10px;color:var(--muted);text-align:right;white-space:nowrap}
+.pl-pct{font-family:var(--mono);font-size:11px;font-weight:500;text-align:right;white-space:nowrap;min-width:46px}
+.pl-pct.win{color:var(--green)}.pl-pct.lose{color:var(--red)}.pl-pct.pend{color:var(--gold);animation:pb .9s ease infinite}
+@keyframes pb{0%,100%{opacity:1}50%{opacity:.4}}
 
-.players-list {
-  flex: 1; overflow-y: auto; padding: 6px 0;
-}
-.pl-row {
-  display: grid; grid-template-columns: auto 1fr auto auto;
-  align-items: center; gap: 8px;
-  padding: 7px 14px; border-bottom: 1px solid rgba(30,30,53,.6);
-  transition: background .1s;
-}
-.pl-row:hover { background: var(--panel2); }
-.pl-avatar {
-  width: 26px; height: 26px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 13px; flex-shrink: 0;
-}
-.pl-name { font-size: 12px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pl-amount { font-family: var(--mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
-.pl-profit {
-  font-family: var(--mono); font-size: 12px; font-weight: 500;
-  white-space: nowrap; min-width: 60px; text-align: right;
-}
-.pl-profit.win { color: var(--green); }
-.pl-profit.lose { color: var(--red); }
-.pl-profit.pending { color: var(--gold); animation: pendBlink 1s ease infinite; }
-@keyframes pendBlink { 0%,100%{opacity:1} 50%{opacity:.5} }
-
-/* Wallet card in sidebar */
-.wallet-section {
-  border-top: 1px solid var(--border); padding: 12px 14px; flex-shrink: 0;
-}
-.wallet-card {
-  background: linear-gradient(135deg, var(--panel2), rgba(124,58,237,.06));
-  border: 1px solid var(--border2); border-radius: var(--r); padding: 12px;
-}
-.wc-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
-.wc-addr { font-family: var(--mono); font-size: 10px; color: #a78bfa; margin-bottom: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.wc-bal { font-family: var(--mono); font-size: 22px; font-weight: 500; color: var(--gold); margin-bottom: 10px; }
-.wc-bal span { font-size: 11px; color: var(--muted); }
-.wc-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-.wc-btn {
-  padding: 7px; border-radius: var(--r2); font-size: 11px; font-weight: 700;
-  cursor: pointer; font-family: var(--font); transition: all .15s; border: none; text-align: center;
-}
-.wc-dep { background: var(--violet); color: #fff; }
-.wc-dep:hover { background: #6d28d9; }
-.wc-wd { background: var(--panel); border: 1px solid var(--border2); color: var(--muted); }
-.wc-wd:hover { border-color: var(--gold); color: var(--gold); }
+/* Wallet card in players panel */
+.pp-wallet{border-top:1px solid var(--border);padding:10px;flex-shrink:0}
+.wc{background:linear-gradient(135deg,var(--panel2),rgba(124,58,237,.06));
+  border:1px solid var(--border2);border-radius:8px;padding:10px}
+.wc-lbl{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px}
+.wc-addr{font-family:var(--mono);font-size:9px;color:#a78bfa;margin-bottom:8px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wc-bal{font-family:var(--mono);font-size:20px;font-weight:500;color:var(--gold);margin-bottom:8px}
+.wc-bal span{font-size:10px;color:var(--muted)}
+.wc-btns{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.wc-btn{padding:6px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;
+  font-family:var(--font);transition:all .15s;border:none;text-align:center}
+.wc-dep{background:var(--violet);color:#fff}.wc-dep:hover{background:#6d28d9}
+.wc-wd{background:var(--panel);border:1px solid var(--border2);color:var(--muted)}
+.wc-wd:hover{border-color:var(--gold);color:var(--gold)}
 
 /* ── MODALS ── */
-.modal-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,.75); backdrop-filter: blur(4px);
-  z-index: 500; display: none; align-items: center; justify-content: center;
-}
-.modal-overlay.open { display: flex; }
-.modal {
-  background: var(--panel); border: 1px solid var(--border2);
-  border-radius: 16px; padding: 28px; width: 380px; max-width: 95vw;
-  position: relative; animation: modalIn .2s ease;
-}
-@keyframes modalIn { from{transform:scale(.95);opacity:0} to{transform:scale(1);opacity:1} }
-.modal-title { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
-.modal-sub { font-size: 12px; color: var(--muted); margin-bottom: 20px; line-height: 1.6; }
-.modal-close {
-  position: absolute; top: 16px; right: 16px; background: none;
-  border: 1px solid var(--border); color: var(--muted);
-  width: 28px; height: 28px; border-radius: 5px; cursor: pointer;
-  font-size: 13px; display: flex; align-items: center; justify-content: center;
-  transition: all .15s;
-}
-.modal-close:hover { border-color: var(--red); color: var(--red); }
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);
+  z-index:500;display:none;align-items:center;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:var(--panel);border:1px solid var(--border2);border-radius:14px;
+  padding:26px;width:370px;max-width:95vw;position:relative;animation:mIn .2s ease}
+@keyframes mIn{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-title{font-size:19px;font-weight:800;margin-bottom:3px}
+.modal-sub{font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.6}
+.mclose{position:absolute;top:14px;right:14px;background:none;border:1px solid var(--border);
+  color:var(--muted);width:26px;height:26px;border-radius:5px;cursor:pointer;
+  font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.mclose:hover{border-color:var(--red);color:var(--red)}
 
-/* Privy login methods */
-.privy-methods { display: flex; flex-direction: column; gap: 8px; }
-.privy-btn {
-  display: flex; align-items: center; gap: 10px; width: 100%;
-  padding: 11px 14px; background: var(--panel2); border: 1px solid var(--border2);
-  border-radius: var(--r2); color: var(--text); cursor: pointer; font-family: var(--font);
-  font-size: 13px; font-weight: 600; transition: all .15s;
-}
-.privy-btn:hover { border-color: var(--violet); background: var(--violet-dim); color: #a78bfa; }
-.privy-icon { font-size: 17px; }
-.privy-divider { display: flex; align-items: center; gap: 8px; margin: 2px 0; }
-.privy-divider::before, .privy-divider::after { content:''; flex:1; height:1px; background:var(--border); }
-.privy-divider span { font-size: 11px; color: var(--muted); }
-.privy-email-form { display: flex; gap: 6px; }
-.privy-email-inp {
-  flex: 1; background: var(--panel2); border: 1px solid var(--border2);
-  border-radius: var(--r2); padding: 10px 12px; color: var(--text);
-  font-size: 13px; font-family: var(--font); transition: border-color .15s;
-}
-.privy-email-inp:focus { outline: none; border-color: var(--violet); }
-.privy-email-inp::placeholder { color: var(--muted2); }
+.privy-methods{display:flex;flex-direction:column;gap:7px}
+.privy-btn{display:flex;align-items:center;gap:9px;width:100%;padding:10px 12px;
+  background:var(--panel2);border:1px solid var(--border2);border-radius:6px;
+  color:var(--text);cursor:pointer;font-family:var(--font);font-size:12px;
+  font-weight:600;transition:all .15s}
+.privy-btn:hover{border-color:var(--violet);background:rgba(124,58,237,.1)}
+.pdiv{display:flex;align-items:center;gap:8px;margin:3px 0}
+.pdiv::before,.pdiv::after{content:'';flex:1;height:1px;background:var(--border)}
+.pdiv span{font-size:10px;color:var(--muted)}
+.email-row{display:flex;gap:5px}
+.email-inp{flex:1;background:var(--panel2);border:1px solid var(--border2);border-radius:6px;
+  padding:9px 10px;color:var(--text);font-size:12px;font-family:var(--font);transition:border-color .15s}
+.email-inp:focus{outline:none;border-color:var(--violet)}
+.email-inp::placeholder{color:var(--muted)}
 
-/* Deposit/Withdraw modal */
-.dw-tabs { display: flex; gap: 0; margin-bottom: 18px; border: 1px solid var(--border); border-radius: var(--r2); overflow: hidden; }
-.dw-tab { flex:1; padding:9px; text-align:center; cursor:pointer; font-size:13px; font-weight:700; transition:all .15s; border:none; background:transparent; color:var(--muted); font-family:var(--font); }
-.dw-tab.active { background:var(--violet); color:#fff; }
-.dw-addr-box { background:var(--panel2); border:1px solid var(--border); border-radius:var(--r2); padding:12px; margin-bottom:12px; }
-.dw-addr-label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:5px; }
-.dw-addr { font-family:var(--mono); font-size:11px; color:#a78bfa; word-break:break-all; line-height:1.6; }
-.dw-copy { width:100%; padding:7px; background:var(--violet-dim); border:1px solid var(--violet); border-radius:5px; color:#a78bfa; cursor:pointer; font-size:11px; font-weight:700; font-family:var(--font); }
-.dw-copy:hover { background:var(--violet); color:#fff; }
-.dw-inp { width:100%; background:var(--panel2); border:1px solid var(--border2); border-radius:var(--r2); padding:10px 12px; color:var(--text); font-size:14px; font-family:var(--mono); font-weight:500; margin-bottom:10px; transition:border-color .15s; }
-.dw-inp:focus { outline:none; border-color:var(--violet); }
-.dw-note { font-size:10px; color:var(--muted); line-height:1.6; margin-bottom:12px; }
-.dw-submit { width:100%; padding:12px; border-radius:var(--r2); font-size:14px; font-weight:800; cursor:pointer; border:none; font-family:var(--font); transition:all .15s; background:var(--violet); color:#fff; box-shadow:0 0 16px var(--violet-glow); }
-.dw-submit:hover { background:#6d28d9; }
-.inp-label { font-size:11px; color:var(--muted); margin-bottom:5px; display:block; }
+.dw-tabs{display:flex;margin-bottom:16px;border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.dw-tab{flex:1;padding:8px;text-align:center;cursor:pointer;font-size:12px;font-weight:700;
+  transition:all .15s;border:none;background:transparent;color:var(--muted);font-family:var(--font)}
+.dw-tab.active{background:var(--violet);color:#fff}
+.dw-addr-box{background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:10px}
+.dw-addr-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.dw-addr{font-family:var(--mono);font-size:10px;color:#a78bfa;word-break:break-all;line-height:1.6}
+.dw-copy{width:100%;padding:7px;background:rgba(124,58,237,.1);border:1px solid var(--violet);
+  border-radius:5px;color:#a78bfa;cursor:pointer;font-size:11px;font-weight:700;font-family:var(--font)}
+.dw-copy:hover{background:var(--violet);color:#fff}
+.dw-inp{width:100%;background:var(--panel2);border:1px solid var(--border2);border-radius:6px;
+  padding:9px 10px;color:var(--text);font-size:13px;font-family:var(--mono);margin-bottom:8px;transition:border-color .15s}
+.dw-inp:focus{outline:none;border-color:var(--violet)}
+.dw-note{font-size:10px;color:var(--muted);line-height:1.6;margin-bottom:12px}
+.dw-submit{width:100%;padding:11px;border-radius:6px;font-size:13px;font-weight:800;
+  cursor:pointer;border:none;font-family:var(--font);background:var(--violet);color:#fff}
+.inp-lbl{font-size:10px;color:var(--muted);margin-bottom:4px;display:block}
 
 /* Toast */
-.toast {
-  display: none; position: fixed; top: 62px; right: 16px; z-index: 800;
-  background: var(--panel2); border: 1px solid var(--border2);
-  border-radius: var(--r); padding: 12px 16px;
-  min-width: 230px; animation: toastIn .2s ease; box-shadow: 0 8px 32px rgba(0,0,0,.5);
-}
-.toast.show { display: flex; align-items: center; gap: 10px; }
-.toast.win  { border-color: var(--green); }
-.toast.lose { border-color: var(--red); }
-.t-icon { font-size: 20px; flex-shrink: 0; }
-.t-text strong { display: block; font-size: 14px; font-weight: 800; }
-.t-text span   { color: var(--muted); font-size: 11px; }
-@keyframes toastIn { from{opacity:0;transform:translateX(16px)} to{opacity:1;transform:translateX(0)} }
+.toast{display:none;position:fixed;top:58px;right:14px;z-index:800;
+  background:var(--panel2);border:1px solid var(--border2);border-radius:8px;
+  padding:11px 14px;min-width:210px;box-shadow:0 8px 28px rgba(0,0,0,.5);
+  animation:tIn .2s ease}
+.toast.show{display:flex;align-items:center;gap:8px}
+.toast.win{border-color:var(--green)}.toast.lose{border-color:var(--red)}
+.t-ico{font-size:18px;flex-shrink:0}
+.t-body strong{display:block;font-size:13px;font-weight:800}
+.t-body span{color:var(--muted);font-size:10px}
+@keyframes tIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:translateX(0)}}
 
-@media(max-width:800px){
-  .app { grid-template-columns: 1fr; }
-  .sidebar-r { display: none; }
-}
+@media(max-width:900px){.main{grid-template-columns:0 1fr 0}.chat-panel,.players-panel{display:none}}
 </style>
 </head>
 <body>
 
-<!-- ═══ NAV ═══ -->
+<!-- NAV -->
 <nav class="nav">
   <div class="logo"><div class="logo-dot"></div>DegenSad</div>
-
-  <!-- Round history -->
-  <div class="round-history" id="roundHistory"></div>
-
+  <div class="history-row" id="historyRow"></div>
   <div class="nav-right">
-    <div class="balance-pill" id="navBal" style="display:none">
-      <span style="font-size:12px;color:var(--muted)">◎</span>
-      <span class="bp-val" id="navBalVal">0.0000</span>
+    <div class="bal-pill" id="navBal" style="display:none">
+      <span style="font-size:11px;color:var(--muted)">◎</span>
+      <span class="bal-val" id="navBalVal">0.0000</span>
       <span style="font-size:11px;color:var(--muted)">SOL</span>
     </div>
     <button class="btn btn-ghost" id="connectBtn" onclick="openLogin()">⬡ Connect</button>
-    <button class="btn btn-primary" style="display:none" id="depositBtn" onclick="openDW('deposit')">+ Deposit</button>
+    <button class="btn btn-primary" id="depositBtn" style="display:none" onclick="openDW('deposit')">+ Deposit</button>
   </div>
 </nav>
 
-<!-- ═══ APP ═══ -->
-<div class="app">
+<!-- MAIN -->
+<div class="main">
 
-  <!-- CENTER: Chart + controls -->
+  <!-- CHAT LEFT -->
+  <div class="chat-panel">
+    <div class="chat-header">
+      <div style="display:flex;align-items:center;gap:6px">
+        <span class="online-dot"></span>
+        <span class="online-label">Online</span>
+        <span class="online-count" id="onlineCount">(0)</span>
+      </div>
+      <div class="chat-icons">
+        <div class="chat-icon">💬</div>
+        <div class="chat-icon">𝕏</div>
+        <div class="chat-icon">✈</div>
+      </div>
+    </div>
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-input-wrap">
+      <div class="chat-inp-row" id="chatInputRow" style="display:none">
+        <input class="chat-inp" id="chatInp" placeholder="Say something…" onkeydown="if(event.key==='Enter')sendChat()">
+        <button class="chat-send" onclick="sendChat()">→</button>
+      </div>
+      <div class="chat-connect-note" id="chatNote">Please connect wallet to chat</div>
+    </div>
+  </div>
+
+  <!-- GAME CENTER -->
   <div class="game-center">
 
-    <!-- Chart -->
-    <div class="chart-wrap">
+    <!-- Chart box -->
+    <div class="chart-box">
       <canvas id="rugCanvas"></canvas>
-
-      <!-- Live multiplier -->
-      <div class="mult-badge waiting" id="multBadge">—</div>
-
-      <!-- Countdown overlay -->
-      <div class="countdown-overlay" id="cdOverlay">
-        <div class="cd-label">Next round in</div>
+      <div class="mult-badge wait" id="multBadge">—</div>
+      <div class="cd-overlay show" id="cdOverlay">
+        <div class="cd-lbl">Next round in</div>
         <div class="cd-num" id="cdNum">5</div>
       </div>
-
-      <!-- Rugged overlay -->
       <div class="rug-overlay" id="rugOverlay">
-        <div class="rugged-text" id="rugTitle">Rugged!</div>
-        <div class="thanks-text">Thanks for playing 👊 🐱</div>
-        <div class="final-mult-text" id="finalMult"></div>
+        <div class="rug-word" id="rugWord">Rugged!</div>
+        <div class="rug-thanks">Thanks for playing 👊 🐱</div>
+        <div class="rug-mult" id="rugMult"></div>
       </div>
     </div>
 
     <!-- Controls -->
-    <div class="controls-bar">
-      <!-- Bet amount -->
-      <div class="cb-group">
-        <div class="cb-label">Bet (SOL)</div>
-        <div class="cb-inp-row">
-          <div class="cb-inp-wrap">
-            <input class="cb-inp" id="betAmt" type="number" value="0.100" min="0.001" step="0.001">
-            <span class="cb-unit">SOL</span>
+    <div class="controls">
+      <!-- Bet -->
+      <div class="ctrl-section">
+        <div class="ctrl-label">Bet (SOL)</div>
+        <div class="ctrl-inp-row">
+          <div class="ctrl-inp-box">
+            <input class="ctrl-inp" id="betAmt" type="number" value="0,100" min="0.001" step="0.001" style="width:70px">
+            <span class="ctrl-unit">SOL</span>
           </div>
-          <div class="qbtns">
-            <button class="qb" onclick="setBet(.05)">0.05</button>
-            <button class="qb" onclick="setBet(.1)">0.1</button>
-            <button class="qb" onclick="setBet(.5)">0.5</button>
-            <button class="qb" onclick="setBet(1)">1</button>
-            <button class="qb" onclick="setBet(null,'half')">½</button>
-            <button class="qb" onclick="setBet(null,'double')">2×</button>
-          </div>
+        </div>
+        <div class="qbtns" style="margin-top:4px">
+          <button class="qb" onclick="setBet(.05)">0.05</button>
+          <button class="qb" onclick="setBet(.1)">0.1</button>
+          <button class="qb" onclick="setBet(.5)">0.5</button>
+          <button class="qb" onclick="setBet(1)">1</button>
+          <button class="qb" onclick="setBet(null,'h')">½</button>
+          <button class="qb" onclick="setBet(null,'d')">2×</button>
         </div>
       </div>
 
-      <div class="cb-divider"></div>
-
       <!-- Auto cashout -->
-      <div class="cb-group">
-        <div class="cb-label">Auto Cashout</div>
-        <div class="cb-inp-row">
-          <div class="cb-inp-wrap">
-            <input class="cb-inp" id="autoTarget" type="number" value="2.00" min="1.01" step="0.1" style="width:70px">
-            <span class="cb-unit">×</span>
+      <div class="ctrl-section">
+        <div class="ctrl-label">Auto Cashout</div>
+        <div class="ctrl-inp-row">
+          <div class="ctrl-inp-box">
+            <input class="ctrl-inp" id="autoTarget" type="number" value="2.00" min="1.01" step="0.1" style="width:60px">
+            <span class="ctrl-unit">×</span>
           </div>
-          <label class="auto-label">
+          <label class="auto-lbl">
             <input type="checkbox" id="autoEnabled"> Auto
           </label>
         </div>
       </div>
 
-      <div class="cb-divider"></div>
-
-      <!-- Stats -->
-      <div class="cb-group" style="min-width:130px">
-        <div class="cb-label">Potential win</div>
-        <div style="font-family:var(--mono);font-size:16px;color:var(--gold)" id="potentialWin">—</div>
-        <div style="font-size:10px;color:var(--muted)">House edge: 1%</div>
+      <!-- Potential win -->
+      <div class="ctrl-section">
+        <div class="ctrl-label">Potential Win</div>
+        <div class="pot-val" id="potVal">—</div>
+        <div class="pot-sub">House edge: 1%</div>
       </div>
 
-      <!-- Action button -->
-      <button class="action-btn waiting" id="actionBtn" onclick="onAction()">Waiting…</button>
+      <!-- BUY / SELL -->
+      <div class="ctrl-section" style="border:none">
+        <div class="buy-sell">
+          <button class="buy-btn waiting" id="buyBtn" onclick="onBuy()">BUY</button>
+          <button class="sell-btn" id="sellBtn" onclick="onSell()" disabled>SELL</button>
+        </div>
+      </div>
     </div>
+
   </div>
 
-  <!-- SIDEBAR RIGHT -->
-  <div class="sidebar-r">
-    <div class="sr-header">
-      <span class="sr-title">Players</span>
-      <span class="sr-round" id="roundLabel">Round #1</span>
+  <!-- PLAYERS RIGHT -->
+  <div class="players-panel">
+    <div class="pp-header">
+      <span class="pp-title">Players</span>
+      <span class="pp-round" id="ppRound">Round #1</span>
     </div>
     <div class="players-list" id="playersList"></div>
-    <div class="wallet-section" id="walletSection" style="display:none">
-      <div class="wallet-card">
-        <div class="wc-label">Connected</div>
+    <div class="pp-wallet" id="ppWallet" style="display:none">
+      <div class="wc">
+        <div class="wc-lbl">Connected</div>
         <div class="wc-addr" id="wcAddr">—</div>
-        <div class="wc-label" style="margin-top:6px">Balance</div>
+        <div class="wc-lbl" style="margin-top:6px">Balance</div>
         <div class="wc-bal"><span id="wcBal">0.0000</span> <span>SOL</span></div>
-        <div class="wc-actions">
+        <div class="wc-btns">
           <button class="wc-btn wc-dep" onclick="openDW('deposit')">Deposit</button>
-          <button class="wc-btn wc-wd"  onclick="openDW('withdraw')">Withdraw</button>
+          <button class="wc-btn wc-wd" onclick="openDW('withdraw')">Withdraw</button>
         </div>
       </div>
     </div>
   </div>
+
 </div>
 
-<!-- ═══ LOGIN MODAL ═══ -->
-<div class="modal-overlay" id="loginModal" onclick="if(event.target===this)closeLogin()">
+<!-- LOGIN MODAL -->
+<div class="overlay" id="loginModal" onclick="if(event.target===this)closeLogin()">
   <div class="modal">
-    <button class="modal-close" onclick="closeLogin()">✕</button>
+    <button class="mclose" onclick="closeLogin()">✕</button>
     <div class="modal-title">Connect to DegenSad</div>
-    <div class="modal-sub">
-      Embedded wallets powered by <strong style="color:#a78bfa">Privy</strong>.
-      Sign in with any method to get a Solana wallet instantly.
-    </div>
+    <div class="modal-sub">Embedded wallets powered by <strong style="color:#a78bfa">Privy</strong>. Instant Solana wallet on signup.</div>
     <div class="privy-methods">
-      <button class="privy-btn" onclick="loginWith('google')">
-        <span class="privy-icon">🟢</span> Continue with Google
-      </button>
-      <button class="privy-btn" onclick="loginWith('twitter')">
-        <span class="privy-icon">𝕏</span> Continue with X / Twitter
-      </button>
-      <button class="privy-btn" onclick="loginWith('discord')">
-        <span class="privy-icon">💬</span> Continue with Discord
-      </button>
-      <div class="privy-divider"><span>or</span></div>
-      <div class="privy-email-form">
-        <input class="privy-email-inp" id="emailInp" type="email" placeholder="your@email.com">
-        <button class="btn btn-primary" style="padding:10px 14px" onclick="loginWith('email')">→</button>
+      <button class="privy-btn" onclick="loginWith('google')"><span>🟢</span> Continue with Google</button>
+      <button class="privy-btn" onclick="loginWith('twitter')"><span>𝕏</span> Continue with X / Twitter</button>
+      <button class="privy-btn" onclick="loginWith('discord')"><span>💬</span> Continue with Discord</button>
+      <div class="pdiv"><span>or</span></div>
+      <div class="email-row">
+        <input class="email-inp" id="emailInp" type="email" placeholder="your@email.com">
+        <button class="btn btn-primary" style="padding:9px 12px" onclick="loginWith('email')">→</button>
       </div>
-      <button class="privy-btn" onclick="loginWith('phantom')">
-        <span class="privy-icon">👻</span> Phantom / External Wallet
-      </button>
+      <button class="privy-btn" onclick="loginWith('phantom')"><span>👻</span> Phantom / External Wallet</button>
     </div>
-    <div style="margin-top:14px;font-size:10px;color:var(--muted);text-align:center;line-height:1.7">
-      By connecting you agree to our Terms of Service.<br>
-      Must be 18+ · Please gamble responsibly.
+    <div style="margin-top:12px;font-size:10px;color:var(--muted);text-align:center;line-height:1.7">
+      By connecting you agree to our Terms.<br>Must be 18+. Gamble responsibly.
     </div>
   </div>
 </div>
 
-<!-- ═══ DEPOSIT / WITHDRAW MODAL ═══ -->
-<div class="modal-overlay" id="dwModal" onclick="if(event.target===this)closeDW()">
+<!-- DEPOSIT/WITHDRAW -->
+<div class="overlay" id="dwModal" onclick="if(event.target===this)closeDW()">
   <div class="modal">
-    <button class="modal-close" onclick="closeDW()">✕</button>
+    <button class="mclose" onclick="closeDW()">✕</button>
     <div class="modal-title" id="dwTitle">Deposit SOL</div>
     <div class="dw-tabs">
       <button class="dw-tab active" id="dwDepTab" onclick="setDWMode('deposit')">Deposit</button>
@@ -561,700 +508,571 @@ input[type=checkbox] { accent-color: var(--violet); }
     </div>
     <div id="dwDepContent">
       <div class="dw-addr-box">
-        <div class="dw-addr-label">Your Solana Deposit Address</div>
+        <div class="dw-addr-lbl">Your Solana Address</div>
         <div class="dw-addr" id="dwAddr">—</div>
       </div>
       <button class="dw-copy" onclick="copyAddr()">📋 Copy Address</button>
-      <div class="dw-note" style="margin-top:10px">
-        Send SOL to the address above. Balance updates after ~1 confirmation (≈15 seconds). Min: 0.01 SOL.
-      </div>
+      <div class="dw-note" style="margin-top:10px">Send SOL to this address. Balance updates in ~15s. Min: 0.01 SOL.</div>
     </div>
     <div id="dwWdContent" style="display:none">
-      <label class="inp-label">Amount (SOL)</label>
+      <label class="inp-lbl">Amount (SOL)</label>
       <input class="dw-inp" id="wdAmt" type="number" placeholder="0.00" min="0.05" step="0.01">
-      <label class="inp-label">Destination Address</label>
+      <label class="inp-lbl">Destination Address</label>
       <input class="dw-inp" id="wdAddr" type="text" placeholder="Solana wallet address…">
-      <div class="dw-note">Min: 0.05 SOL · Network fee: ~0.000005 SOL · Processed in ~30s</div>
+      <div class="dw-note">Min: 0.05 SOL · Fee: ~0.000005 SOL · ~30s processing</div>
       <button class="dw-submit" onclick="submitWithdraw()">Withdraw →</button>
     </div>
   </div>
 </div>
 
-<!-- ═══ TOAST ═══ -->
+<!-- TOAST -->
 <div class="toast" id="toast">
-  <span class="t-icon" id="tIcon">🚀</span>
-  <div class="t-text">
-    <strong id="tTitle"></strong>
-    <span id="tSub"></span>
-  </div>
+  <span class="t-ico" id="tIco">🚀</span>
+  <div class="t-body"><strong id="tTitle"></strong><span id="tSub"></span></div>
 </div>
 
 <script>
-/* ═══════════════════════════════════════════════════════════
-   DEGENSAD — RUG GAME ENGINE
-   Candlestick chart · Provably fair · Privy hooks
-   ═══════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════
+   DEGENSAD — RUG ENGINE
+   Privy stubs: replace with real SDK hooks
+   ═══════════════════════════════════════ */
 
-   PRIVY INTEGRATION NOTES:
-   This file uses stub functions. In your React build, replace:
-   
-   privyLogin()  → const { login } = usePrivy(); login();
-   privyLogout() → const { logout } = usePrivy(); logout();
-   privySend()   → wallet.sendTransaction(tx, connection);
-   
-   After login, extract the embedded Solana wallet:
-     const { wallets } = useSolanaWallets();
-     const embeddedWallet = wallets.find(w => w.walletClientType === 'privy');
-     const addr = embeddedWallet.address;
-   
-   ═══════════════════════════════════════════════════════════ */
-
-// ─── STATE ───────────────────────────────────
-let wallet   = null;   // { addr, balance }
-let gameState = 'countdown';  // countdown | running | crashed
+// ─── STATE ───────────────
+let wallet = null;
+let gamePhase = 'countdown'; // countdown | running | crashed
 let currentMult = 1.00;
-let crashPoint  = 1.00;
-let betAmt = 0;
-let betPlaced = false;
-let cashedOut = false;
+let crashPoint = 1.00;
+let myBet = 0;
+let myBetIn = false;
+let mySold = false;
 let roundNum = 1;
 let countdown = 5;
-
-// Candle data
-let candles = [];          // [{o,h,l,c, time}]
-let currentCandle = null;  // live forming candle
+let cdTimer = null;
+let rafId = null;
 let startTime = 0;
-let raf = null;
+let lastTick = 0;
 
-// Round history
+// Candle data — each candle = ~2s of game time
+const CANDLE_TICKS = 18; // ticks per candle (100ms each → ~1.8s)
+let candles = [];
+let liveCandle = null;
+let candleTick = 0;
+
+// History & players
 let roundHistory = [];
-
-// Players for the sidebar
 let players = [];
 
-const FAKE_NAMES = ['Nooh4','Johmani','Doubledick','Zaynoo','Robbie06','swerving','Athosonsol','fistilink','wd404','CryptoApe','BagHolder','NFA_Bro','SolanaGod','GigaChad','Anon','RugVictim','NGMI','PaperHands','LFG_bro','Wagmi99'];
-const AVATARS = ['🐺','🦊','🐸','🐯','🦁','🐻','🐼','🦅','🐉','🦄','🐙','🦈','🐬','🦋','🦀'];
+const NAMES = ['CryptoApe','SolanaGod','Robbie06','NGMI','LFG_bro','PaperHands','RugVictim','Johmani','Nooh4','Zaynoo','swerving','Athosonsol','fistilink','BagHolder','NFA_Bro','GigaChad','Wagmi99','Anon','POORANKOOZI','TJRizzy','Forwho','BrewDog','beans','makaon','Summers','paco111','viii','hello00','Cattv','CryptoFool'];
+const AVATARS = ['🐺','🦊','🐸','🐯','🦁','🐻','🐼','🦅','🐉','🦄','🐙','🦈','🐬','🦋','🦀','🐆','🦉','🦑','🦜','🐝'];
+const CHAT_MSGS = [
+  'lfg lfg lfg','anyone loan here lol','this gonna rug at 1x i feel it','REKT again 💀','WAGMI boys','bro I had 10x and held 😭','pls be 2x pls be 2x','not financial advice but BUY','paper hands again smh','ez money ngl','this one going to 50x trust','rugged at 1.003x gg','who else holding till crash','free money machine broke','gm degens'];
 
-// ─── CANVAS ──────────────────────────────────
+// ─── CANVAS ──────────────
 const canvas = document.getElementById('rugCanvas');
 const ctx = canvas.getContext('2d');
 
 function resizeCanvas() {
-  const wrap = canvas.parentElement;
-  canvas.width  = wrap.clientWidth  * window.devicePixelRatio;
-  canvas.height = wrap.clientHeight * window.devicePixelRatio;
-  canvas.style.width  = wrap.clientWidth  + 'px';
-  canvas.style.height = wrap.clientHeight + 'px';
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * window.devicePixelRatio;
+  canvas.height = rect.height * window.devicePixelRatio;
+  canvas.style.width = rect.width + 'px';
+  canvas.style.height = rect.height + 'px';
   ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-  draw();
+  renderChart();
 }
 window.addEventListener('resize', resizeCanvas);
 
-// ─── DRAW ─────────────────────────────────────
-function draw() {
-  const W = canvas.clientWidth;
-  const H = canvas.clientHeight;
+// ─── CHART RENDER ─────────
+function renderChart() {
+  const W = canvas.clientWidth, H = canvas.clientHeight;
   ctx.clearRect(0, 0, W, H);
 
-  const padL = 52, padR = 16, padT = 30, padB = 36;
-  const chartW = W - padL - padR;
-  const chartH = H - padT - padB;
+  const PAD_L = 46, PAD_R = 12, PAD_T = 18, PAD_B = 22;
+  const cW = W - PAD_L - PAD_R;
+  const cH = H - PAD_T - PAD_B;
 
-  // All visible candles (history + current)
-  const allC = currentCandle ? [...candles, currentCandle] : [...candles];
-  if (allC.length === 0) {
-    drawGrid(W, H, padL, padT, chartW, chartH, 1, 3);
-    return;
+  const all = liveCandle ? [...candles, liveCandle] : [...candles];
+
+  // Determine Y range
+  let maxM = 2, minM = 0.5;
+  if (all.length) {
+    maxM = Math.max(...all.map(c => c.h), 2);
+    minM = Math.max(0.01, Math.min(...all.map(c => c.l), 0.8));
   }
-
-  const maxMult = Math.max(...allC.map(c => c.h), 2);
-  const minMult = Math.max(0.01, Math.min(...allC.map(c => c.l), 0.5));
-  const multRange = maxMult - minMult;
-
-  // X: each candle gets equal width
-  const totalDuration = allC[allC.length - 1].time - allC[0].time + 1;
-  const xScale = chartW / Math.max(totalDuration, 8);
-
-  const toX = (t) => padL + (t - allC[0].time) * xScale;
-  const toY = (m) => padT + chartH - ((m - minMult) / multRange) * chartH;
+  const mRange = maxM - minM;
 
   // Grid
-  drawGrid(W, H, padL, padT, chartW, chartH, minMult, maxMult);
+  ctx.strokeStyle = 'rgba(31,31,53,.9)'; ctx.lineWidth = 1;
+  const ySteps = 5;
+  ctx.font = '9px DM Mono, monospace'; ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(74,68,112,.75)';
+  for (let i = 0; i <= ySteps; i++) {
+    const frac = i / ySteps;
+    const m = minM + mRange * frac;
+    const y = PAD_T + cH - frac * cH;
+    ctx.beginPath(); ctx.moveTo(PAD_L, y); ctx.lineTo(PAD_L + cW, y); ctx.stroke();
+    ctx.fillText(m.toFixed(2) + '×', PAD_L - 3, y + 3);
+  }
+  for (let i = 0; i <= 6; i++) {
+    const x = PAD_L + (cW * i / 6);
+    ctx.beginPath(); ctx.moveTo(x, PAD_T); ctx.lineTo(x, PAD_T + cH); ctx.stroke();
+  }
 
-  // Draw all candles
-  const candleW = Math.max(4, Math.min(18, xScale * 0.7));
+  if (all.length === 0) return;
 
-  for (const c of allC) {
-    const x   = toX(c.time);
-    const ox  = toY(c.o);
-    const cx2 = toY(c.c);
-    const hx  = toY(c.h);
-    const lx  = toY(c.l);
+  // X mapping — spread candles evenly but leave room for more
+  const maxSlots = Math.max(all.length + 2, 12);
+  const slotW = cW / maxSlots;
+  const BODY_W = Math.max(6, Math.min(22, slotW * 0.55));
+
+  const toX = i => PAD_L + (i + 0.5) * slotW;
+  const toY = m => PAD_T + cH - ((m - minM) / mRange) * cH;
+
+  // Draw candles
+  for (let i = 0; i < all.length; i++) {
+    const c = all[i];
+    const x = toX(i);
     const isUp = c.c >= c.o;
-    const col  = isUp ? '#22c55e' : '#e53e3e';
-    const colDim = isUp ? 'rgba(34,197,94,.3)' : 'rgba(229,62,62,.3)';
+    const col = isUp ? '#22c55e' : '#e53e3e';
+    const colDim = isUp ? 'rgba(34,197,94,.25)' : 'rgba(229,62,62,.25)';
+
+    const yHigh = toY(c.h);
+    const yLow  = toY(c.l);
+    const yOpen = toY(c.o);
+    const yClose= toY(c.c);
+    const bodyTop = Math.min(yOpen, yClose);
+    const bodyH   = Math.max(2, Math.abs(yOpen - yClose));
 
     // Wick
-    ctx.strokeStyle = col;
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(x, hx);
-    ctx.lineTo(x, lx);
-    ctx.stroke();
+    ctx.strokeStyle = col; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(x, yHigh); ctx.lineTo(x, yLow); ctx.stroke();
 
     // Body
-    const bodyTop = Math.min(ox, cx2);
-    const bodyH   = Math.max(1, Math.abs(ox - cx2));
     ctx.fillStyle = col;
-    ctx.strokeStyle = colDim;
-    ctx.lineWidth = 0.5;
-    const bx = x - candleW / 2;
+    const bx = x - BODY_W / 2;
     ctx.beginPath();
-    ctx.roundRect(bx, bodyTop, candleW, bodyH, 1);
+    if (ctx.roundRect) ctx.roundRect(bx, bodyTop, BODY_W, bodyH, 2);
+    else ctx.rect(bx, bodyTop, BODY_W, bodyH);
     ctx.fill();
-    ctx.stroke();
+
+    // Glow on live candle
+    if (i === all.length - 1 && gamePhase === 'running') {
+      ctx.shadowColor = col; ctx.shadowBlur = 10;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
   }
 
-  // Running line from last close to current price
-  if (gameState === 'running' && currentCandle) {
-    const last = allC[allC.length - 1];
-    const lx = toX(last.time);
+  // Live price line (dashed)
+  if (gamePhase === 'running' && all.length > 0) {
+    const lastX = toX(all.length - 1);
     const ly = toY(currentMult);
-    // Glowing dot
-    ctx.beginPath();
-    ctx.arc(lx, ly, 4, 0, Math.PI * 2);
-    ctx.fillStyle = currentMult >= (last.o || 1) ? '#22c55e' : '#e53e3e';
-    ctx.shadowColor = currentMult >= 1 ? 'var(--green-glow)' : 'var(--red-glow)';
-    ctx.shadowBlur = 12;
-    ctx.fill();
-    ctx.shadowBlur = 0;
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = 'rgba(255,255,255,.12)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(PAD_L, ly); ctx.lineTo(PAD_L + cW, ly); ctx.stroke();
+    ctx.setLineDash([]);
+    // Dot
+    ctx.beginPath(); ctx.arc(lastX, ly, 4, 0, Math.PI * 2);
+    ctx.fillStyle = currentMult > 1 ? '#22c55e' : '#e53e3e';
+    ctx.shadowColor = currentMult > 1 ? '#22c55e' : '#e53e3e'; ctx.shadowBlur = 10;
+    ctx.fill(); ctx.shadowBlur = 0;
   }
 }
 
-function drawGrid(W, H, padL, padT, chartW, chartH, minM, maxM) {
-  ctx.strokeStyle = 'rgba(30,30,53,0.8)';
-  ctx.lineWidth = 1;
-  // Horizontal lines with mult labels
-  const levels = 6;
-  for (let i = 0; i <= levels; i++) {
-    const m = minM + (maxM - minM) * (i / levels);
-    const y = padT + chartH - (chartH * i / levels);
-    ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + chartW, y); ctx.stroke();
-    ctx.fillStyle = 'rgba(90,84,128,0.7)';
-    ctx.font = '9px DM Mono, monospace';
-    ctx.textAlign = 'right';
-    ctx.fillText(m.toFixed(2) + '×', padL - 4, y + 3);
-  }
-  // Vertical lines
-  for (let i = 0; i < 8; i++) {
-    const x = padL + (chartW * i / 7);
-    ctx.beginPath(); ctx.moveTo(x, padT); ctx.lineTo(x, padT + chartH); ctx.stroke();
-  }
-  // Bottom axis
-  ctx.strokeStyle = 'rgba(40,40,74,.9)';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.moveTo(padL, padT + chartH); ctx.lineTo(padL + chartW, padT + chartH); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, padT + chartH); ctx.stroke();
-}
-
-// ─── CRASH POINT GENERATOR ────────────────────
-function generateCrashPoint() {
+// ─── CRASH GENERATOR ─────────
+function genCrashPoint() {
   const r = Math.random();
-  if (r < 0.01) return 1.00;         // house edge
-  if (r < 0.0002) return 10 + Math.random() * 40; // god candle
+  if (r < 0.01) return 1.00;
+  if (r < 0.0003) return 10 + Math.random() * 40;
   return Math.min(Math.max(1.01, 99 / (99 * r + 1)), 100);
 }
 
-// ─── CANDLE MACHINE ──────────────────────────
-// Candles form every ~1 second of game time
-let candleTick = 0;
-
-function openNewCandle(mult) {
-  currentCandle = { o: mult, h: mult, l: mult, c: mult, time: candles.length };
+// ─── CANDLE UPDATE ──────────
+function openCandle(mult) {
+  const noise = () => mult * (Math.random() * .008);
+  liveCandle = { o: mult, h: mult + noise(), l: Math.max(.01, mult - noise()), c: mult };
   candleTick = 0;
 }
-
-function updateCurrentCandle(mult) {
-  if (!currentCandle) return;
-  currentCandle.c = mult;
-  currentCandle.h = Math.max(currentCandle.h, mult);
-  currentCandle.l = Math.min(currentCandle.l, mult);
-  // Add noise to wicks
-  const noise = mult * (Math.random() * 0.012);
-  currentCandle.h = Math.max(currentCandle.h, mult + noise);
-  currentCandle.l = Math.min(currentCandle.l, Math.max(0.01, mult - noise));
+function tickCandle(mult) {
+  if (!liveCandle) return;
+  liveCandle.c = mult;
+  liveCandle.h = Math.max(liveCandle.h, mult + mult * Math.random() * .01);
+  liveCandle.l = Math.min(liveCandle.l, Math.max(.01, mult - mult * Math.random() * .01));
   candleTick++;
-  // Close candle every ~12 ticks (~1.2 seconds)
-  if (candleTick >= 12) {
-    candles.push({ ...currentCandle });
-    openNewCandle(mult);
+  if (candleTick >= CANDLE_TICKS) {
+    candles.push({ ...liveCandle });
+    openCandle(mult);
   }
 }
 
-// ─── GAME LOOP ────────────────────────────────
-let lastTick = 0;
-const TICK_MS = 100;
-
+// ─── GAME LOOP ────────────
 function gameLoop(ts) {
-  if (ts - lastTick < TICK_MS) { raf = requestAnimationFrame(gameLoop); return; }
+  if (gamePhase !== 'running') return;
+  if (ts - lastTick < 100) { rafId = requestAnimationFrame(gameLoop); return; }
   lastTick = ts;
 
-  if (gameState !== 'running') return;
-
   const elapsed = (Date.now() - startTime) / 1000;
-  currentMult = Math.pow(Math.E, 0.00006 * elapsed * 1000);
-  currentMult = Math.round(currentMult * 1000) / 1000;
+  currentMult = Math.round(Math.pow(Math.E, .00006 * elapsed * 1000) * 10000) / 10000;
 
-  updateCurrentCandle(currentMult);
-
-  // Update badge
-  const badge = document.getElementById('multBadge');
-  badge.textContent = currentMult.toFixed(2) + '×';
-  badge.className = 'mult-badge running';
-
-  // Potential win
-  if (betPlaced && !cashedOut) {
-    const win = (betAmt * currentMult).toFixed(4);
-    document.getElementById('potentialWin').textContent = win + ' SOL';
-    document.getElementById('actionBtn').textContent = `💰 Cash Out (${currentMult.toFixed(2)}×)`;
-  }
-
-  // Auto cashout
-  if (betPlaced && !cashedOut && document.getElementById('autoEnabled').checked) {
-    const target = parseFloat(document.getElementById('autoTarget').value);
-    if (currentMult >= target) doCashout();
-  }
-
-  draw();
-
-  if (currentMult >= crashPoint) {
-    doRug();
-    return;
-  }
-
-  raf = requestAnimationFrame(gameLoop);
-}
-
-// ─── DO RUG ──────────────────────────────────
-function doRug() {
-  cancelAnimationFrame(raf);
-  gameState = 'crashed';
-
-  // Close final candle
-  if (currentCandle) {
-    currentCandle.c = currentMult;
-    candles.push({ ...currentCandle });
-    currentCandle = null;
-  }
-  draw();
+  tickCandle(currentMult);
+  renderChart();
 
   // Update badge
   const badge = document.getElementById('multBadge');
   badge.textContent = currentMult.toFixed(4) + '×';
-  badge.className = 'mult-badge crashed';
+  badge.className = 'mult-badge run';
 
-  // Show rugged overlay
-  document.getElementById('rugOverlay').classList.add('show');
-  document.getElementById('rugTitle').textContent = currentMult < 1.05 ? 'Rugged!' : 'REKT!';
-  document.getElementById('finalMult').textContent = currentMult.toFixed(4) + '×';
-
-  // Round outcome for player (if bet placed and not cashed out)
-  if (betPlaced && !cashedOut && wallet) {
-    showToast('💀 RUGGED', `-${betAmt.toFixed(4)} SOL · Crashed at ${currentMult.toFixed(4)}×`, 'lose');
-    betPlaced = false;
+  // Potential win
+  if (myBetIn && !mySold) {
+    document.getElementById('potVal').textContent = (myBet * currentMult).toFixed(4) + ' SOL';
+    document.getElementById('buyBtn').textContent = `SELL ${currentMult.toFixed(2)}×`;
   }
 
-  // Mark all pending players as lost
-  finalizePlayerRound(currentMult);
+  // Auto cashout
+  if (myBetIn && !mySold && document.getElementById('autoEnabled').checked) {
+    const t = parseFloat(document.getElementById('autoTarget').value);
+    if (currentMult >= t) doSell();
+  }
 
-  // Action button
-  const btn = document.getElementById('actionBtn');
-  btn.className = 'action-btn waiting';
-  btn.textContent = 'Waiting…';
-  btn.disabled = true;
+  // Fake player cashouts
+  players.forEach(p => {
+    if (!p.isMe && p.profit == null && p._cashAt && currentMult >= p._cashAt) {
+      p.profit = parseFloat(((p.bet * p._cashAt) - p.bet).toFixed(4));
+      p.mult = p._cashAt;
+    }
+  });
+  renderPlayers();
 
-  // Add to history
-  addRoundHistory(currentMult);
+  if (currentMult >= crashPoint) { doRug(); return; }
+  rafId = requestAnimationFrame(gameLoop);
+}
 
-  // Next round after delay
+// ─── RUG ─────────────────
+function doRug() {
+  cancelAnimationFrame(rafId);
+  gamePhase = 'crashed';
+  if (liveCandle) { liveCandle.c = currentMult; candles.push({...liveCandle}); liveCandle = null; }
+  renderChart();
+
+  const badge = document.getElementById('multBadge');
+  badge.textContent = currentMult.toFixed(4) + '×';
+  badge.className = 'mult-badge crash';
+
+  document.getElementById('rugWord').textContent = currentMult < 1.05 ? 'Rugged!' : currentMult < 1.2 ? 'REKT!' : 'Rugged!';
+  document.getElementById('rugMult').textContent = currentMult.toFixed(4) + '×';
+  document.getElementById('rugOverlay').classList.add('show');
+
+  if (myBetIn && !mySold && wallet) {
+    showToast('💀 RUGGED', `-${myBet.toFixed(4)} SOL · Crashed at ${currentMult.toFixed(4)}×`, 'lose');
+  }
+
+  // Finalize players
+  players.forEach(p => {
+    if (p.profit == null) {
+      p.profit = -p.bet;
+      p.mult = currentMult;
+    }
+  });
+  renderPlayers();
+
+  const buyBtn = document.getElementById('buyBtn');
+  buyBtn.className = 'buy-btn waiting'; buyBtn.textContent = 'Waiting…'; buyBtn.disabled = true;
+  document.getElementById('sellBtn').disabled = true;
+  document.getElementById('potVal').textContent = '—';
+
+  addHistory(currentMult);
   setTimeout(() => {
     document.getElementById('rugOverlay').classList.remove('show');
-    startCountdown();
+    beginCountdown();
   }, 4500);
 }
 
-// ─── CASHOUT ─────────────────────────────────
-function doCashout() {
-  if (!betPlaced || cashedOut || gameState !== 'running') return;
-  cashedOut = true;
-  const win = betAmt * currentMult;
+// ─── SELL (cashout) ───────
+function doSell() {
+  if (!myBetIn || mySold || gamePhase !== 'running') return;
+  mySold = true;
+  const win = myBet * currentMult;
   wallet.balance += win;
   updateBalUI();
-  showToast('🤑 Cashed Out!', `+${(win - betAmt).toFixed(4)} SOL at ${currentMult.toFixed(2)}×`, 'win');
-  betAmt = 0;
-  const btn = document.getElementById('actionBtn');
-  btn.className = 'action-btn bet';
-  btn.textContent = '🚀 Place Bet';
-  document.getElementById('potentialWin').textContent = '—';
-  // Mark player in sidebar
-  markPlayerCashout(currentMult);
+  showToast('🤑 Sold!', `+${(win - myBet).toFixed(4)} SOL at ${currentMult.toFixed(2)}×`, 'win');
+  myBet = 0;
+  document.getElementById('buyBtn').className = 'buy-btn'; document.getElementById('buyBtn').textContent = 'BUY';
+  document.getElementById('sellBtn').disabled = true;
+  document.getElementById('potVal').textContent = '—';
+  const me = players.find(p => p.isMe);
+  if (me) { me.profit = parseFloat((win - (myBet||me.bet)).toFixed(4)); me.mult = currentMult; renderPlayers(); }
 }
 
-// ─── COUNTDOWN ────────────────────────────────
-let cdInterval = null;
-function startCountdown() {
-  cancelAnimationFrame(raf);
-  gameState = 'countdown';
-  countdown = 5;
-  candles = [];
-  currentCandle = null;
-  currentMult = 1.00;
-  betPlaced = false;
-  cashedOut = false;
+function onBuy() {
+  if (!requireWallet()) return;
+  if (gamePhase === 'running' && myBetIn && !mySold) { doSell(); return; }
+  if (gamePhase !== 'running' && gamePhase !== 'countdown') return;
+  const amt = parseFloat(document.getElementById('betAmt').value);
+  if (!amt || amt <= 0) return;
+  if (amt > wallet.balance) { showToast('❌ Balance insuffisant', 'Deposit SOL', 'lose'); return; }
+  wallet.balance -= amt; updateBalUI();
+  myBet = amt; myBetIn = true; mySold = false;
+  document.getElementById('buyBtn').className = 'buy-btn cashout';
+  document.getElementById('buyBtn').textContent = gamePhase === 'countdown' ? '⏳ Placed' : `SELL ${currentMult.toFixed(2)}×`;
+  document.getElementById('sellBtn').disabled = false;
+  addSelfPlayer(amt);
+}
+function onSell() { doSell(); }
+
+function setBet(v, mod) {
+  const inp = document.getElementById('betAmt');
+  if (mod === 'h') { inp.value = (parseFloat(inp.value)/2).toFixed(3); return; }
+  if (mod === 'd') { inp.value = (parseFloat(inp.value)*2).toFixed(3); return; }
+  inp.value = v.toFixed(3);
+}
+
+// ─── COUNTDOWN ───────────
+function beginCountdown() {
+  cancelAnimationFrame(rafId);
+  gamePhase = 'countdown';
+  countdown = 5; candles = []; liveCandle = null;
+  currentMult = 1.00; myBetIn = false; mySold = false; myBet = 0;
   roundNum++;
 
   document.getElementById('cdNum').textContent = countdown;
   document.getElementById('cdOverlay').classList.add('show');
-  document.getElementById('multBadge').textContent = '—';
-  document.getElementById('multBadge').className = 'mult-badge waiting';
-  document.getElementById('roundLabel').textContent = `Round #${roundNum}`;
-  document.getElementById('potentialWin').textContent = '—';
+  document.getElementById('multBadge').textContent = '—'; document.getElementById('multBadge').className = 'mult-badge wait';
+  document.getElementById('ppRound').textContent = `Round #${roundNum}`;
+  document.getElementById('potVal').textContent = '—';
+  const buyBtn = document.getElementById('buyBtn');
+  buyBtn.className = 'buy-btn'; buyBtn.textContent = 'BUY'; buyBtn.disabled = false;
+  document.getElementById('sellBtn').disabled = true;
+  renderChart(); generatePlayers();
 
-  const btn = document.getElementById('actionBtn');
-  btn.className = 'action-btn bet';
-  btn.textContent = '🎯 Place Bet';
-  btn.disabled = false;
-
-  draw();
-  generateFakePlayers();
-
-  cdInterval = setInterval(() => {
+  clearInterval(cdTimer);
+  cdTimer = setInterval(() => {
     countdown--;
     document.getElementById('cdNum').textContent = countdown;
-    if (countdown <= 0) {
-      clearInterval(cdInterval);
-      startRound();
-    }
+    if (countdown <= 0) { clearInterval(cdTimer); startRound(); }
   }, 1000);
 }
 
 function startRound() {
   document.getElementById('cdOverlay').classList.remove('show');
-  gameState = 'running';
-  crashPoint = generateCrashPoint();
-  startTime = Date.now();
-  lastTick = 0;
-  openNewCandle(1.00);
-
-  const btn = document.getElementById('actionBtn');
-  if (!betPlaced) {
-    btn.className = 'action-btn bet';
-    btn.textContent = '🚀 Place Bet';
+  gamePhase = 'running'; crashPoint = genCrashPoint();
+  startTime = Date.now(); lastTick = 0;
+  openCandle(1.00);
+  if (myBetIn) {
+    document.getElementById('buyBtn').className = 'buy-btn cashout';
+    document.getElementById('buyBtn').textContent = 'SELL 1.00×';
   }
-  btn.disabled = false;
-
-  raf = requestAnimationFrame(gameLoop);
+  rafId = requestAnimationFrame(gameLoop);
 }
 
-// ─── BET ACTION ──────────────────────────────
-function onAction() {
-  if (!requireWallet()) return;
-  if (gameState === 'running' && betPlaced && !cashedOut) {
-    doCashout();
-    return;
-  }
-  if (gameState === 'running' && !betPlaced) {
-    const amt = parseFloat(document.getElementById('betAmt').value);
-    if (!amt || amt <= 0) return;
-    if (amt > wallet.balance) { showToast('❌ Low balance', 'Deposit more SOL', 'lose'); return; }
-    wallet.balance -= amt;
-    updateBalUI();
-    betAmt = amt;
-    betPlaced = true;
-    cashedOut = false;
-    const btn = document.getElementById('actionBtn');
-    btn.className = 'action-btn cashout';
-    btn.textContent = `💰 Cash Out (${currentMult.toFixed(2)}×)`;
-    // Add self to players
-    addSelfToPlayers(amt);
-    return;
-  }
-  if (gameState === 'countdown') {
-    const amt = parseFloat(document.getElementById('betAmt').value);
-    if (!amt || amt <= 0) return;
-    if (amt > wallet.balance) { showToast('❌ Low balance', 'Deposit more SOL', 'lose'); return; }
-    wallet.balance -= amt;
-    updateBalUI();
-    betAmt = amt;
-    betPlaced = true;
-    cashedOut = false;
-    const btn = document.getElementById('actionBtn');
-    btn.className = 'action-btn cashout';
-    btn.textContent = '⏳ Bet Placed';
-    addSelfToPlayers(amt);
-  }
-}
-
-function setBet(val, mod) {
-  const inp = document.getElementById('betAmt');
-  if (mod === 'half')   { inp.value = (parseFloat(inp.value) / 2).toFixed(3); return; }
-  if (mod === 'double') { inp.value = (parseFloat(inp.value) * 2).toFixed(3); return; }
-  inp.value = val.toFixed(3);
-}
-
-// ─── PLAYERS SIDEBAR ─────────────────────────
-function generateFakePlayers() {
+// ─── PLAYERS ────────────
+function generatePlayers() {
   players = [];
-  const count = 6 + Math.floor(Math.random() * 8);
-  for (let i = 0; i < count; i++) {
+  const n = 5 + Math.floor(Math.random() * 8);
+  for (let i = 0; i < n; i++) {
+    const willCash = Math.random() < .55;
     players.push({
-      name:   FAKE_NAMES[Math.floor(Math.random() * FAKE_NAMES.length)],
-      avatar: AVATARS[Math.floor(Math.random() * AVATARS.length)],
-      bet:    parseFloat((Math.random() * 2 + 0.01).toFixed(3)),
-      profit: null,
-      cashoutAt: null,
-      isMe: false,
+      name: NAMES[Math.floor(Math.random() * NAMES.length)],
+      av: AVATARS[Math.floor(Math.random() * AVATARS.length)],
+      bet: parseFloat((Math.random() * 2 + .01).toFixed(3)),
+      profit: null, mult: null, isMe: false,
+      _cashAt: willCash ? parseFloat((1.05 + Math.random() * 4).toFixed(2)) : null,
     });
   }
   renderPlayers();
-  // Schedule some to cash out during the round
-  scheduleFakeCashouts();
 }
-
-function addSelfToPlayers(amt) {
-  players.unshift({
-    name: wallet ? (wallet.addr.slice(0,4) + '…' + wallet.addr.slice(-4)) : 'You',
-    avatar: '⭐',
-    bet: amt,
-    profit: null,
-    cashoutAt: null,
-    isMe: true,
-  });
+function addSelfPlayer(amt) {
+  players = players.filter(p => !p.isMe);
+  players.unshift({ name: wallet ? wallet.addr.slice(0,4)+'…'+wallet.addr.slice(-4) : 'You',
+    av:'⭐', bet:amt, profit:null, mult:null, isMe:true, _cashAt:null });
   renderPlayers();
 }
-
-function scheduleFakeCashouts() {
-  players.forEach(p => {
-    if (p.isMe) return;
-    const willCash = Math.random() < 0.5;
-    if (willCash) {
-      const targetMult = 1.05 + Math.random() * 4;
-      p._scheduledAt = targetMult;
-    }
-  });
-}
-
-function markPlayerCashout(mult) {
-  // Called by game loop to trigger fake cashouts
-  players.forEach(p => {
-    if (p.isMe || p.cashoutAt !== null) return;
-    if (p._scheduledAt && mult >= p._scheduledAt) {
-      p.cashoutAt = parseFloat(mult.toFixed(2));
-      p.profit = parseFloat(((p.bet * p.cashoutAt) - p.bet).toFixed(4));
-    }
-  });
-  renderPlayers();
-}
-
-// During game loop, call this to trigger progressive cashouts
-let lastMultForCashouts = 0;
-const origLoop = window.gameLoop;
-function tickCashouts() {
-  if (gameState !== 'running') return;
-  if (Math.abs(currentMult - lastMultForCashouts) > 0.05) {
-    markPlayerCashout(currentMult);
-    lastMultForCashouts = currentMult;
-  }
-}
-
-function finalizePlayerRound(crashedAt) {
-  players.forEach(p => {
-    if (p.cashoutAt === null && !p.isMe) {
-      p.profit = -p.bet;
-      p.cashoutAt = crashedAt;
-    }
-    if (p.isMe && p.cashoutAt === null) {
-      if (cashedOut) {
-        p.cashoutAt = parseFloat((betAmt > 0 ? currentMult : crashedAt).toFixed(2));
-        p.profit = parseFloat(((betAmt || 0) * (p.cashoutAt || 0)).toFixed(4));
-      } else if (betPlaced) {
-        p.profit = -betAmt;
-        p.cashoutAt = crashedAt;
-      }
-    }
-  });
-  renderPlayers();
-}
-
 function renderPlayers() {
-  const list = document.getElementById('playersList');
-  list.innerHTML = players.map(p => {
-    let profitStr, profitClass;
-    if (p.profit === null) {
-      profitStr = '+' + ((p.bet * 2).toFixed(3)) + '?';
-      profitClass = 'pending';
-    } else if (p.profit >= 0) {
-      profitStr = '+' + p.profit.toFixed(3);
-      profitClass = 'win';
-    } else {
-      profitStr = p.profit.toFixed(3);
-      profitClass = 'lose';
-    }
-    const avatarBg = p.isMe ? 'rgba(124,58,237,.3)' : 'rgba(40,40,74,.6)';
-    return `
-      <div class="pl-row">
-        <div class="pl-avatar" style="background:${avatarBg}">${p.avatar}</div>
-        <span class="pl-name" style="${p.isMe ? 'color:#a78bfa' : ''}">${p.name}</span>
-        <span class="pl-amount">${p.bet.toFixed(3)} ◎</span>
-        <span class="pl-profit ${profitClass}">${profitStr}</span>
-      </div>`;
+  document.getElementById('playersList').innerHTML = players.map(p => {
+    let pct, cls;
+    if (p.profit === null) { pct = '?'; cls = 'pend'; }
+    else if (p.profit >= 0) { pct = '+' + ((p.profit / p.bet) * 100).toFixed(1) + '%'; cls = 'win'; }
+    else { pct = ((p.profit / p.bet) * 100).toFixed(1) + '%'; cls = 'lose'; }
+    const avBg = p.isMe ? 'rgba(124,58,237,.3)' : 'rgba(37,34,64,.8)';
+    return `<div class="pl-row">
+      <div class="pl-av" style="background:${avBg}">${p.av}</div>
+      <span class="pl-name" style="${p.isMe?'color:#a78bfa':''}">${p.name}</span>
+      <span class="pl-amt">${p.bet.toFixed(3)} ◎</span>
+      <span class="pl-pct ${cls}">${pct}</span>
+    </div>`;
   }).join('');
-  // Trigger cashout check during live round
-  if (gameState === 'running') tickCashouts();
 }
 
-// ─── ROUND HISTORY ────────────────────────────
-function addRoundHistory(mult) {
+// ─── HISTORY ─────────────
+function addHistory(mult) {
   roundHistory.unshift(mult);
-  if (roundHistory.length > 12) roundHistory.pop();
-  const container = document.getElementById('roundHistory');
-  container.innerHTML = roundHistory.map(m => {
+  if (roundHistory.length > 10) roundHistory.pop();
+  renderHistory();
+}
+function renderHistory() {
+  const row = document.getElementById('historyRow');
+  row.innerHTML = roundHistory.map(m => {
     const cls = m >= 2 ? 'high' : m >= 1.2 ? 'mid' : 'low';
-    return `<span class="rh-pill ${cls}">${m.toFixed(2)}×</span>`;
+    const clr = m >= 2 ? '#22c55e' : m >= 1.2 ? '#d4a847' : '#e53e3e';
+    return `<div class="hist-box">
+      <canvas class="hist-canvas" width="44" height="22" data-mult="${m}" data-clr="${clr}"></canvas>
+      <span class="hist-mult ${cls}">${m.toFixed(2)}×</span>
+    </div>`;
   }).join('');
+  // Draw mini spark charts
+  document.querySelectorAll('.hist-canvas').forEach(c => {
+    const m = parseFloat(c.dataset.mult);
+    const clr = c.dataset.clr;
+    const hctx = c.getContext('2d');
+    hctx.clearRect(0,0,44,22);
+    // Generate random mini candles
+    const steps = 5;
+    const prices = [1];
+    for (let i = 1; i < steps; i++) prices.push(prices[i-1] * (1 + (Math.random()-.3) * .3));
+    prices.push(m);
+    const maxP = Math.max(...prices), minP = Math.min(...prices, .9);
+    const rng = maxP - minP || 1;
+    const toY2 = v => 20 - ((v-minP)/rng)*18;
+    hctx.strokeStyle = clr; hctx.lineWidth = 1.5;
+    hctx.beginPath();
+    prices.forEach((p,i) => {
+      const x = 2 + (i/(prices.length-1))*40;
+      if (i===0) hctx.moveTo(x,toY2(p)); else hctx.lineTo(x,toY2(p));
+    });
+    hctx.stroke();
+  });
 }
 
-// ─── PRIVY AUTH (stubs) ───────────────────────
-// ══ REPLACE THESE WITH REAL PRIVY SDK CALLS ══
+// ─── CHAT ────────────────
+let onlineUsers = 0;
+const chatLog = [];
+function initChat() {
+  onlineUsers = 120 + Math.floor(Math.random()*60);
+  document.getElementById('onlineCount').textContent = `(${onlineUsers})`;
+  // Seed messages
+  for (let i = 0; i < 12; i++) spawnChatMsg();
+  setInterval(spawnChatMsg, 2200 + Math.random()*3000);
+}
+function spawnChatMsg() {
+  const name = NAMES[Math.floor(Math.random()*NAMES.length)];
+  const av = AVATARS[Math.floor(Math.random()*AVATARS.length)];
+  const msg = CHAT_MSGS[Math.floor(Math.random()*CHAT_MSGS.length)];
+  addChatMsg(name, av, msg);
+}
+function addChatMsg(name, av, msg) {
+  const container = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'chat-msg';
+  div.innerHTML = `<div class="cm-avatar">${av}</div>
+    <div class="cm-body"><div class="cm-name">${name}</div><div class="cm-text">${msg}</div></div>`;
+  container.appendChild(div);
+  if (container.children.length > 60) container.removeChild(container.firstChild);
+  container.scrollTop = container.scrollHeight;
+}
+function sendChat() {
+  if (!wallet) { openLogin(); return; }
+  const inp = document.getElementById('chatInp');
+  const msg = inp.value.trim();
+  if (!msg) return;
+  addChatMsg(wallet.addr.slice(0,4)+'…'+wallet.addr.slice(-4), '⭐', msg);
+  inp.value = '';
+}
+
+// ─── PRIVY STUBS ─────────
+// Replace with real @privy-io/react-auth hooks in production:
+//   const { login, logout } = usePrivy();
+//   const { wallets } = useSolanaWallets();
+//   const embeddedWallet = wallets.find(w => w.walletClientType === 'privy');
 async function privyLogin(method, email) {
-  // Production: const { login } = usePrivy(); await login();
-  // Then: const { wallets } = useSolanaWallets();
-  //        const embedded = wallets.find(w => w.walletClientType === 'privy');
-  console.log('[Privy] Connecting with:', method, email || '');
-  await new Promise(r => setTimeout(r, 800)); // simulate network
-  return {
-    user: { id: 'usr_' + Math.random().toString(36).slice(2, 10) },
-    wallet: { address: generateSolAddr() },
-  };
+  await delay(700);
+  return { wallet: { address: solAddr() } };
 }
-async function privyGetBalance(addr) {
-  // Production: const conn = new Connection(RPC_URL);
-  //             return (await conn.getBalance(new PublicKey(addr))) / 1e9;
-  return parseFloat((1.5 + Math.random() * 3).toFixed(4));
-}
-async function privySend(from, to, sol) {
-  // Production: await wallet.sendTransaction(tx, connection);
-  await new Promise(r => setTimeout(r, 600));
-  return 'sim_' + Math.random().toString(36).slice(2, 20);
-}
-// ═════════════════════════════════════════════
+async function privyBalance(addr) { await delay(200); return parseFloat((1+Math.random()*4).toFixed(4)); }
+async function privySend(from, to, sol) { await delay(600); return 'sig_'+randStr(18); }
 
-function generateSolAddr() {
-  const a = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz123456789';
-  return Array.from({length:44}, () => a[Math.floor(Math.random()*a.length)]).join('');
+const delay = ms => new Promise(r => setTimeout(r, ms));
+const randStr = n => Array.from({length:n},()=>'abcdefghijklmnopqrstuvwxyz0123456789'[Math.floor(Math.random()*36)]).join('');
+function solAddr() {
+  const a='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz123456789';
+  return Array.from({length:44},()=>a[Math.floor(Math.random()*a.length)]).join('');
 }
 
-// ─── AUTH ─────────────────────────────────────
-function openLogin()  { document.getElementById('loginModal').classList.add('open'); }
+// ─── AUTH ─────────────────
+function openLogin() { document.getElementById('loginModal').classList.add('open'); }
 function closeLogin() { document.getElementById('loginModal').classList.remove('open'); }
-
 async function loginWith(method) {
-  closeLogin();
-  showToast('🔄 Connecting…', 'Privy handshake…', '');
+  closeLogin(); showToast('🔄 Connecting…','Privy handshake…','');
   try {
-    const email = method === 'email' ? document.getElementById('emailInp').value : null;
+    const email = method==='email' ? document.getElementById('emailInp').value : null;
     const res = await privyLogin(method, email);
     const addr = res.wallet.address;
-    const bal  = await privyGetBalance(addr);
+    const bal = await privyBalance(addr);
     wallet = { addr, balance: bal };
     setWalletUI();
-    showToast('✅ Connected!', addr.slice(0,6) + '…' + addr.slice(-4), 'win');
-  } catch(e) {
-    showToast('❌ Error', e.message || 'Connection failed', 'lose');
-  }
+    showToast('✅ Connected!', addr.slice(0,6)+'…'+addr.slice(-4), 'win');
+  } catch(e) { showToast('❌ Error', e.message||'Failed', 'lose'); }
 }
-
 function setWalletUI() {
   if (!wallet) return;
-  const short = wallet.addr.slice(0,4) + '…' + wallet.addr.slice(-4);
-  document.getElementById('connectBtn').style.display  = 'none';
-  document.getElementById('depositBtn').style.display  = '';
-  document.getElementById('navBal').style.display      = '';
-  document.getElementById('walletSection').style.display = '';
+  document.getElementById('connectBtn').style.display = 'none';
+  document.getElementById('depositBtn').style.display = '';
+  document.getElementById('navBal').style.display = '';
+  document.getElementById('ppWallet').style.display = '';
+  document.getElementById('chatInputRow').style.display = '';
+  document.getElementById('chatNote').style.display = 'none';
   updateBalUI();
   document.getElementById('wcAddr').textContent = wallet.addr;
 }
-
 function updateBalUI() {
   if (!wallet) return;
   document.getElementById('navBalVal').textContent = wallet.balance.toFixed(4);
-  document.getElementById('wcBal').textContent     = wallet.balance.toFixed(4);
+  document.getElementById('wcBal').textContent = wallet.balance.toFixed(4);
 }
+function requireWallet() { if (!wallet){openLogin();return false;} return true; }
 
-function requireWallet() {
-  if (!wallet) { openLogin(); return false; }
-  return true;
+// ─── DEPOSIT/WITHDRAW ─────
+function openDW(m) { setDWMode(m); if(wallet)document.getElementById('dwAddr').textContent=wallet.addr; document.getElementById('dwModal').classList.add('open'); }
+function closeDW() { document.getElementById('dwModal').classList.remove('open'); }
+function setDWMode(m) {
+  document.getElementById('dwTitle').textContent = m==='deposit'?'Deposit SOL':'Withdraw SOL';
+  document.getElementById('dwDepTab').classList.toggle('active',m==='deposit');
+  document.getElementById('dwWdTab').classList.toggle('active',m==='withdraw');
+  document.getElementById('dwDepContent').style.display = m==='deposit'?'':'none';
+  document.getElementById('dwWdContent').style.display = m==='withdraw'?'':'none';
 }
-
-// ─── DEPOSIT / WITHDRAW ───────────────────────
-function openDW(mode) {
-  setDWMode(mode);
-  if (wallet) document.getElementById('dwAddr').textContent = wallet.addr;
-  document.getElementById('dwModal').classList.add('open');
-}
-function closeDW()  { document.getElementById('dwModal').classList.remove('open'); }
-function setDWMode(mode) {
-  document.getElementById('dwTitle').textContent  = mode === 'deposit' ? 'Deposit SOL' : 'Withdraw SOL';
-  document.getElementById('dwDepTab').classList.toggle('active', mode === 'deposit');
-  document.getElementById('dwWdTab').classList.toggle('active',  mode === 'withdraw');
-  document.getElementById('dwDepContent').style.display = mode === 'deposit'  ? '' : 'none';
-  document.getElementById('dwWdContent').style.display  = mode === 'withdraw' ? '' : 'none';
-}
-function copyAddr() {
-  if (!wallet) return;
-  navigator.clipboard.writeText(wallet.addr)
-    .then(() => showToast('📋 Copied!', 'Address copied', 'win'));
-}
+function copyAddr() { if(wallet) navigator.clipboard.writeText(wallet.addr).then(()=>showToast('📋 Copied!','','')); }
 async function submitWithdraw() {
-  if (!wallet) { openLogin(); return; }
-  const amt  = parseFloat(document.getElementById('wdAmt').value);
-  const dest = document.getElementById('wdAddr').value.trim();
-  if (!amt || amt < 0.05) { showToast('❌ Error', 'Min: 0.05 SOL', 'lose'); return; }
-  if (!dest)              { showToast('❌ Error', 'Enter destination address', 'lose'); return; }
-  if (amt > wallet.balance){ showToast('❌ Error', 'Insufficient balance', 'lose'); return; }
-  showToast('🔄 Processing…', `Sending ${amt} SOL`, '');
+  if (!wallet){openLogin();return;}
+  const amt=parseFloat(document.getElementById('wdAmt').value);
+  const dest=document.getElementById('wdAddr').value.trim();
+  if (!amt||amt<.05){showToast('❌','Min 0.05 SOL','lose');return;}
+  if (!dest){showToast('❌','Enter address','lose');return;}
+  if (amt>wallet.balance){showToast('❌','Insufficient balance','lose');return;}
+  showToast('🔄','Sending…','');
   try {
-    const sig = await privySend(wallet.addr, dest, amt);
-    wallet.balance -= amt;
-    updateBalUI();
-    closeDW();
-    showToast('✅ Sent!', `${amt} SOL withdrawn · ${sig.slice(0,10)}…`, 'win');
-  } catch(e) {
-    showToast('❌ Failed', e.message || 'TX failed', 'lose');
-  }
+    const sig=await privySend(wallet.addr,dest,amt);
+    wallet.balance-=amt; updateBalUI(); closeDW();
+    showToast('✅ Sent!',`${amt} SOL · ${sig.slice(0,10)}…`,'win');
+  } catch(e){showToast('❌',e.message,'lose');}
 }
 
-// ─── TOAST ────────────────────────────────────
+// ─── TOAST ────────────────
 let toastTO;
 function showToast(title, sub, type) {
-  const el = document.getElementById('toast');
-  el.className = 'toast show' + (type ? ' ' + type : '');
-  document.getElementById('tIcon').textContent  = type === 'win' ? '🤑' : type === 'lose' ? '💀' : '🔄';
-  document.getElementById('tTitle').textContent = title;
-  document.getElementById('tSub').textContent   = sub;
-  clearTimeout(toastTO);
-  toastTO = setTimeout(() => el.classList.remove('show'), 3500);
+  const el=document.getElementById('toast');
+  el.className='toast show'+(type?' '+type:'');
+  document.getElementById('tIco').textContent=type==='win'?'🤑':type==='lose'?'💀':'🔄';
+  document.getElementById('tTitle').textContent=title;
+  document.getElementById('tSub').textContent=sub;
+  clearTimeout(toastTO); toastTO=setTimeout(()=>el.classList.remove('show'),3200);
 }
 
-// ─── INIT ─────────────────────────────────────
-(function init() {
+// ─── INIT ─────────────────
+(function(){
   resizeCanvas();
-  startCountdown();
-  // Bet input → update potential win display
-  document.getElementById('betAmt').addEventListener('input', () => {
-    const v = parseFloat(document.getElementById('betAmt').value) || 0;
-    document.getElementById('potentialWin').textContent =
-      v > 0 ? '~' + (v * 2).toFixed(4) + ' SOL' : '—';
+  initChat();
+  beginCountdown();
+  document.getElementById('betAmt').addEventListener('input',()=>{
+    const v=parseFloat(document.getElementById('betAmt').value)||0;
+    document.getElementById('potVal').textContent=v>0?'~'+(v*2).toFixed(4)+' SOL':'—';
   });
 })();
 </script>
