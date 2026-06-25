@@ -2007,6 +2007,40 @@ function updateStats() {
   document.getElementById('statGraduated').textContent = allTokens.filter(t=>t.graduated).length;
 }
 
+/* ═══ BONDING CURVE LIVE UPDATE ═══ */
+function updateBondingCurveUI(tok) {
+  if (!tok) return;
+  // Max SOL in bonding curve = 85 SOL (like pump.fun)
+  const MAX_SOL = 85;
+  const real = parseFloat(tok.real_sol_reserves) || 0;
+  const pct  = Math.min(100, (real / MAX_SOL) * 100).toFixed(1);
+
+  // Token bar (main screen)
+  const mainFill = document.getElementById('mainBondFill');
+  const mainPct  = document.getElementById('mainBondPct');
+  const mainInfo = document.getElementById('mainBondInfo');
+  if (mainFill) mainFill.style.width = pct + '%';
+  if (mainPct)  mainPct.textContent  = pct + '%';
+  if (mainInfo) {
+    const solLeft = Math.max(0, MAX_SOL - real).toFixed(1);
+    mainInfo.textContent = pct >= 100
+      ? '🎓 Graduating to Raydium!'
+      : solLeft + ' SOL needed to graduate';
+  }
+
+  // Modal bonding curve
+  const modalFill = document.getElementById('modalBondFill');
+  const modalPct  = document.getElementById('modalBondPct');
+  if (modalFill) modalFill.style.width = pct + '%';
+  if (modalPct)  modalPct.textContent  = pct + '%';
+
+  // Check graduation
+  if (parseFloat(pct) >= 100 && !tok.graduated) {
+    tok.graduated = true;
+    showNotif('🎓 ' + tok.name + ' is graduating to Raydium!', 'success');
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════════
    TOKEN MODAL
 ═══════════════════════════════════════════════════════════════ */
@@ -2041,6 +2075,7 @@ function openToken(id) {
   renderModalTrades(id);
   renderComments(id);
   updateTradeButton();
+  updateBondingCurveUI(t);
 }
 
 function closeModal() {
@@ -2203,6 +2238,8 @@ function executeTrade() {
     renderModalTrades(currentToken.id);
     addLiveTrade(trade);
     updateStats();
+    updateBondingCurveUI(currentToken);
+    renderTokens(allTokens);
     btn.disabled=false;
     updateTradeButton();
   }, 600);
@@ -2237,6 +2274,8 @@ function quickTrade(mode) {
     updateEst();
     addLiveTrade(trade);
     updateStats();
+    updateBondingCurveUI(currentToken);
+    renderTokens(allTokens);
     btn.disabled=false;
     btn.textContent = mode==='buy'?'▲ BUY':'▼ SELL';
   },900);
@@ -2711,6 +2750,22 @@ function showSection() {}
   initChat();
   loadTokens();
   loadLiveTrades();
+  // Auto-select first token so the main chart and bonding curve are active immediately
+  setTimeout(() => {
+    if (allTokens.length > 0) {
+      const firstToken = allTokens[0];
+      currentToken = firstToken;
+      const price = firstToken.market_cap && firstToken.total_supply
+        ? (firstToken.market_cap / firstToken.total_supply)
+        : 0.000001;
+      document.getElementById('tbAvatar').textContent = firstToken.emoji || '🚀';
+      document.getElementById('tbName').textContent   = firstToken.name;
+      document.getElementById('tbSym').textContent    = '$' + firstToken.symbol;
+      document.getElementById('tbPrice').textContent  = '$' + price.toExponential(3);
+      updateBondingCurveUI(firstToken);
+      updateTradeButton();
+    }
+  }, 100);
 })();
 </script>
 </body>
