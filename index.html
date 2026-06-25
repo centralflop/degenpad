@@ -1,411 +1,263 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DegenPad | Solana Launchpad</title>
-    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
-    <style>
-        :root {
-            --bg-darker: #090a0f;
-            --bg-dark: #0f111a;
-            --bg-card: #151824;
-            --border: #222638;
-            --text-main: #f1f3f9;
-            --text-muted: #6b7280;
-            --primary: #8b5cf6;
-            --primary-hover: #7c3aed;
-            --green: #10b981;
-            --green-dim: rgba(16, 185, 129, 0.1);
-            --red: #ef4444;
-            --red-dim: rgba(239, 68, 68, 0.1);
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-darker);
-            color: var(--text-main);
-            overflow-x: hidden;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 30px;
-            background-color: var(--bg-dark);
-            border-bottom: 1px solid var(--border);
-        }
-
-        .logo-area {
-            font-size: 20px;
-            font-weight: bold;
-            letter-spacing: 1px;
-            background: linear-gradient(45deg, #8b5cf6, #ec4899);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .wallet-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        button {
-            cursor: pointer;
-            border: none;
-            border-radius: 6px;
-            font-weight: 6px;
-            transition: all 0.2s ease;
-        }
-
-        .btn-primary {
-            background-color: var(--primary);
-            color: white;
-            padding: 10px 20px;
-            font-weight: 600;
-        }
-
-        .btn-primary:hover {
-            background-color: var(--primary-hover);
-        }
-
-        /* Layout Principal */
-        .main-layout {
-            display: grid;
-            grid-template-columns: 300px 1fr 300px;
-            height: calc(100vh - 72px);
-        }
-
-        .panel {
-            background-color: var(--bg-dark);
-            border-right: 1px solid var(--border);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .panel-right {
-            border-right: none;
-            border-left: 1px solid var(--border);
-        }
-
-        .center-content {
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        /* Modales */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
-
-        .modal-box {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            padding: 25px;
-            border-radius: 12px;
-            width: 400px;
-            max-width: 90%;
-            position: relative;
-        }
-
-        .modal-header {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .close-btn {
-            color: var(--text-muted);
-            cursor: pointer;
-        }
-
-        .input-group {
-            margin-bottom: 15px;
-        }
-
-        .input-group label {
-            display: block;
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-bottom: 5px;
-        }
-
-        .input-group input {
-            width: 100%;
-            padding: 10px;
-            background: var(--bg-darker);
-            border: 1px solid var(--border);
-            color: white;
-            border-radius: 6px;
-        }
-
-        /* Styles de Statut / Trading Box (Mock) */
-        .trading-box {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 20px;
-        }
-
-        .token-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 10px;
-        }
-    </style>
-</head>
-<body>
-
-    <header>
-        <div class="logo-area">DEGENPAD SOLANA</div>
-        <div class="wallet-container">
-            <button id="walletBtn" class="btn-primary" onclick="toggleWalletAction()">👻 Connect Phantom</button>
-        </div>
-    </header>
-
-    <div class="main-layout">
-        <div class="panel">
-            <h3>Tableau de bord</h3>
-            <div style="background: var(--bg-card); padding: 15px; border-radius: 6px; border: 1px solid var(--border);">
-                <p style="font-size: 12px; color: var(--text-muted);">Solde Interne Plateforme</p>
-                <h2 id="internalBalance">0.0000 SOL</h2>
-            </div>
-            <button class="btn-primary" onclick="openDepositModal()" style="background:#10b981;">📥 Déposer des SOL</button>
-        </div>
-
-        <div class="center-content">
-            <div class="trading-box">
-                <h2>Terminal de Trading (Simulation UI)</h2>
-                <p style="color:var(--text-muted); margin-bottom: 15px;">Sélectionnez un token pour voir la courbe et interagir.</p>
-                <div style="display:flex; gap:10px;">
-                    <button class="btn-primary" style="background:var(--green); width:50%;" onclick="mockTrade('BUY')">Acheter</button>
-                    <button class="btn-primary" style="background:var(--red); width:50%;" onclick="mockTrade('SELL')">Vendre</button>
-                </div>
-            </div>
-
-            <div id="tokenContainer">
-                <h3>Tokens Disponibles</h3>
-                <div class="token-card">
-                    <h4>🚀 DEGENSAD (SAD)</h4>
-                    <p style="font-size:12px; color:var(--text-muted)">Bonding Curve: 45% - Crée par Rugs Fan</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="panel panel-right">
-            <h3>Live Chat</h3>
-            <div style="flex-grow:1; background:var(--bg-darker); border-radius:6px; border:1px solid var(--border); padding:10px; font-size:13px; color:var(--text-muted);">
-                [Système] Connectez votre wallet Phantom pour participer au chat.
-            </div>
-        </div>
+/* ═══════════════════════════════════════════════════════════════
+   COMMENTS & CHAT SYSTEM
+═══════════════════════════════════════════════════════════════ */
+function renderComments(tokenId) {
+  const container = document.getElementById('commentsContainer');
+  if (!container) return;
+  const list = allComments[tokenId] || [];
+  if (!list.length) {
+    container.innerHTML = '<div style="color:var(--muted2);font-size:11px">No comments yet.</div>';
+    return;
+  }
+  container.innerHTML = list.map(c => `
+    <div class="comment">
+      <div class="comment-addr">${c.wallet}</div>
+      <div class="comment-text">${c.content}</div>
+      <div class="comment-time">${timeAgo(c.created_at)}</div>
     </div>
+  `).join('');
+}
 
-    <div id="walletInfoModal" class="modal-overlay" onclick="closeModal('walletInfoModal')">
-        <div class="modal-box" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <span>Mon Portefeuille</span>
-                <span class="close-btn" onclick="closeModal('walletInfoModal')">&times;</span>
-            </div>
-            <p style="font-size:12px; color:var(--text-muted); margin-bottom:5px;">Adresse Publique :</p>
-            <p id="modalWalletAddress" style="font-family:monospace; background:var(--bg-darker); padding:8px; border-radius:4px; font-size:12px; margin-bottom:15px; word-break:break-all;"></p>
-            <p style="font-size:12px; color:var(--text-muted); margin-bottom:5px;">Solde Réel Wallet :</p>
-            <h3 id="modalWalletBalance" style="margin-bottom:20px;">0.0000 SOL</h3>
-            <button class="btn-primary" onclick="disconnectPhantom()" style="background:var(--red); width:100%;">Se déconnecter</button>
-        </div>
+function postComment() {
+  if (!walletAddress) { showNotif('Connect wallet to comment', 'error'); return; }
+  if (!currentToken) return;
+  const inp = document.getElementById('commentInput');
+  const val = inp.value.trim();
+  if (!val) return;
+
+  if (!allComments[currentToken.id]) allComments[currentToken.id] = [];
+  allComments[currentToken.id].push({
+    wallet: walletAddress.slice(0,6)+'…'+walletAddress.slice(-4),
+    content: val,
+    created_at: new Date().toISOString()
+  });
+  inp.value = '';
+  renderComments(currentToken.id);
+}
+
+function sendChat() {
+  const inp = document.getElementById('chatInput');
+  const txt = inp.value.trim();
+  if (!txt) return;
+
+  const wrap = document.getElementById('chatMessages');
+  const addr = walletAddress ? walletAddress.slice(0,6)+'…'+walletAddress.slice(-4) : 'Degen_guest';
+  
+  const msgHtml = `
+    <div class="chat-msg">
+      <div class="chat-msg-header">
+        <span class="chat-addr">${addr}</span>
+        <span class="chat-time">Just now</span>
+      </div>
+      <div class="chat-text">${txt}</div>
     </div>
+  `;
+  
+  if (wrap.innerHTML.includes('Say something')) wrap.innerHTML = '';
+  wrap.innerHTML += msgHtml;
+  inp.value = '';
+  wrap.scrollTop = wrap.scrollHeight;
+}
 
-    <div id="depositModal" class="modal-overlay" onclick="closeModal('depositModal')">
-        <div class="modal-box" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <span>Dépôt de SOL (Vers la plateforme)</span>
-                <span class="close-btn" onclick="closeModal('depositModal')">&times;</span>
-            </div>
-            <div class="input-group">
-                <label for="depositAmount">Montant à transférer (SOL)</label>
-                <input type="number" id="depositAmount" step="0.01" min="0.001" placeholder="Ex: 0.5">
-            </div>
-            <button class="btn-primary" onclick="depositSol()" style="background:var(--green); width:100%;">Confirmer le dépôt via Phantom</button>
-            <p id="depositStatus" style="font-size:12px; color:var(--text-muted); margin-top:10px; text-align:center;"></p>
-        </div>
+/* ═══════════════════════════════════════════════════════════════
+   WALLET CONNECTIONS
+═══════════════════════════════════════════════════════════════ */
+function toggleWalletMenu() {
+  document.getElementById('walletMenu').classList.toggle('open');
+}
+
+function connectPhantom() { connectWallet('Phantom', '5YNf…9kLz'); }
+function connectMetaMask() { connectWallet('MetaMask', '0x71C…429a'); }
+
+function connectWallet(type = 'Phantom', mockAddr = '5YNf…9kLz') {
+  walletAddress = mockAddr;
+  walletType = type;
+  walletBalance = 42.69; // Mock balance
+  
+  document.getElementById('walletBtn').textContent = '⬡ ' + walletAddress.slice(0,6) + '…' + walletAddress.slice(-4);
+  document.getElementById('walletMenu').classList.remove('open');
+  
+  const panelBal = document.getElementById('panelBalance');
+  if (panelBal) panelBal.textContent = walletBalance.toFixed(2) + ' SOL';
+  
+  const mainBal = document.getElementById('mainBalance');
+  if (mainBal) mainBal.textContent = walletBalance.toFixed(2) + ' SOL';
+
+  showNotif(`Connected to ${type}!`, 'success');
+  updateTradeButton();
+}
+
+function disconnectWallet() {
+  walletAddress = null;
+  walletType = null;
+  document.getElementById('walletBtn').textContent = '⬡ Connect Wallet';
+  closeWalletInfoModal();
+  showNotif('Wallet disconnected', 'info');
+  updateTradeButton();
+}
+
+function openWalletInfoModal() {
+  if (!walletAddress) { toggleWalletMenu(); return; }
+  document.getElementById('wiWalletType').textContent = walletType;
+  document.getElementById('wiAddress').textContent = walletAddress;
+  document.getElementById('wiBalance').textContent = walletBalance.toFixed(2) + ' SOL';
+  document.getElementById('walletInfoModal').classList.add('open');
+}
+
+function closeWalletInfoModal() {
+  document.getElementById('walletInfoModal').classList.remove('open');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TICKER & LEADERBOARD HELPERS
+═══════════════════════════════════════════════════════════════ */
+function buildTicker(tokens) {
+  const bar = document.getElementById('tickerBar');
+  const inner = document.getElementById('tickerInner');
+  if (!bar || !inner) return;
+  bar.style.display = 'block';
+  
+  const content = tokens.map(t => `
+    <span class="ticker-item">
+      <span class="sym">${t.symbol}</span> 
+      <span class="up">$${(t.market_cap/1e9).toFixed(4)}</span>
+    </span>
+  `).join(' · ');
+  
+  inner.innerHTML = content + content; // Duplicate for smooth continuous scroll
+}
+
+function buildLeaderboard() {
+  const container = document.getElementById('lbList');
+  if (!container) return;
+  
+  const sorted = [...WALLETS].map((w, i) => ({
+    wallet: w,
+    pnl: (Math.random() * 25 * (i % 2 === 0 ? 1 : -1)).toFixed(2)
+  })).sort((a,b) => b.pnl - a.pnl);
+
+  container.innerHTML = sorted.map((u, i) => `
+    <div class="lb-item">
+      <div class="lb-rank ${i===0?'gold':i===1?'silver':i===2?'bronze':''}">${i+1}</div>
+      <div class="lb-info">
+        <div class="lb-addr">${u.wallet}</div>
+      </div>
+      <div class="lb-pnl ${u.pnl >= 0 ? 'up':'dn'}">${u.pnl >= 0 ? '+' : ''}${u.pnl} SOL</div>
     </div>
+  `).join('');
+}
 
-    <script>
-        // CONFIGURATION : Remplace cette adresse par TON wallet qui va centraliser les dépôts
-        const PLATFORM_DEPOSIT_WALLET = "7XkG1...MettezVotreAdresseIci..."; 
-        
-        // Connexion RPC publique Solana Mainnet-Beta
-        const connection = new solanaWeb3.Connection("https://api.mainnet-beta.solana.com", "confirmed");
+function addLiveTrade(trade) {
+  const container = document.getElementById('sidebarTrades');
+  if (!container) return;
+  if (container.innerHTML.includes('No trades yet')) container.innerHTML = '';
 
-        let walletConnected = false;
-        let userWalletAddress = null;
+  const item = document.createElement('div');
+  item.className = 'live-trade-item';
+  item.innerHTML = `
+    <span class="lt-type ${trade.type==='buy'?'lt-buy':'lt-sell'}">${trade.type.toUpperCase()}</span>
+    <span class="lt-sym">${currentToken?.symbol || 'TOK'}</span>
+    <span class="lt-addr">${trade.wallet}</span>
+    <span class="lt-amt ${trade.type==='buy'?'buy':'sell'}">${parseFloat(trade.sol_amount).toFixed(2)} SOL</span>
+  `;
+  container.insertBefore(item, container.firstChild);
+  if (container.children.length > 8) container.lastChild.remove();
+}
 
-        // Gérer le clic sur le bouton principal du Header
-        function toggleWalletAction() {
-            if (walletConnected) {
-                document.getElementById('modalWalletAddress').textContent = userWalletAddress;
-                openModal('walletInfoModal');
-            } else {
-                connectPhantom();
-            }
-        }
+/* ═══════════════════════════════════════════════════════════════
+   FILTERS & UTILS
+═══════════════════════════════════════════════ */
+function setFilter(filter, el) {
+  currentFilter = filter;
+  document.querySelectorAll('.f-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  filterTokens();
+}
 
-        // Connexion à l'extension Phantom
-        async function connectPhantom() {
-            if (!window.solana || !window.solana.isPhantom) {
-                alert("Erreur : L'extension Phantom n'est pas installée sur votre navigateur.");
-                return;
-            }
+function filterTokens() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  let filtered = allTokens.filter(t => t.name.toLowerCase().includes(search) || t.symbol.toLowerCase().includes(search));
+  
+  if (currentFilter === 'new') {
+    filtered.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+  } else if (currentFilter === 'trending') {
+    filtered.sort((a,b) => b.volume_24h - a.volume_24h);
+  } else if (currentFilter === 'graduating') {
+    filtered = filtered.filter(t => (t.real_sol_reserves/85*100) >= 75);
+  }
+  renderTokens(filtered);
+}
 
-            try {
-                const response = await window.solana.connect();
-                userWalletAddress = response.publicKey.toString();
-                walletConnected = true;
-                
-                console.log("Connecté à Phantom. Adresse :", userWalletAddress);
-                
-                // Mettre à jour l'UI
-                const shortAddr = userWalletAddress.slice(0,4) + '…' + userWalletAddress.slice(-4);
-                document.getElementById('walletBtn').innerHTML = `<span>👻 ${shortAddr}</span>`;
-                
-                // Charger le solde réel de l'utilisateur
-                await updateWalletBalance();
+function openCreateModal() { document.getElementById('createOverlay').classList.add('open'); }
+function closeCreateModal() { document.getElementById('createOverlay').classList.remove('open'); }
 
-            } catch (err) {
-                console.error("Connexion refusée ou échouée :", err);
-            }
-        }
+function previewImage(input) {
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      document.getElementById('imagePreview').src = e.target.result;
+      document.getElementById('imagePreview').style.display = 'block';
+      document.getElementById('uploadPlaceholder').style.display = 'none';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
 
-        // Déconnexion
-        async function disconnectPhantom() {
-            if (window.solana) {
-                await window.solana.disconnect();
-                walletConnected = false;
-                userWalletAddress = null;
-                document.getElementById('walletBtn').innerHTML = "👻 Connect Phantom";
-                document.getElementById('modalWalletBalance').textContent = "0.0000 SOL";
-                closeModal('walletInfoModal');
-                alert("Wallet déconnecté.");
-            }
-        }
+function createToken() {
+  const name = document.getElementById('createName').value.trim();
+  const symbol = document.getElementById('createSymbol').value.trim().toUpperCase();
+  const desc = document.getElementById('createDesc').value.trim();
+  
+  if (!name || !symbol) { showNotif('Name and Symbol are required!', 'error'); return; }
+  
+  const newToken = {
+    id: 't' + (allTokens.length + 1),
+    name, symbol, emoji: '🚀', description: desc,
+    virtual_sol_reserves: 30e9, virtual_token_reserves: 1073e12,
+    real_sol_reserves: 0, total_supply: 1e15,
+    market_cap: 15000, volume_24h: 0, holders: 1,
+    graduated: false, created_at: new Date().toISOString()
+  };
+  
+  allTokens.unshift(newToken);
+  loadTokens();
+  closeCreateModal();
+  showNotif(`$${symbol} successfully launched!`, 'success');
+}
 
-        // Récupérer le solde on-chain réel
-        async function updateWalletBalance() {
-            if (!userWalletAddress) return;
-            try {
-                const pubKey = new solanaWeb3.PublicKey(userWalletAddress);
-                const balanceLamports = await connection.getBalance(pubKey);
-                const balanceSol = balanceLamports / solanaWeb3.LAMPORTS_PER_SOL;
-                
-                // Injection dans les éléments de la modale
-                document.getElementById('modalWalletBalance').textContent = balanceSol.toFixed(4) + " SOL";
-            } catch (err) {
-                console.error("Impossible de récupérer le solde :", err);
-            }
-        }
+function showNotif(msg, type = 'success') {
+  const n = document.getElementById('notif');
+  n.textContent = msg;
+  n.className = `notif show ${type}`;
+  setTimeout(() => n.classList.remove('show'), 3000);
+}
 
-        // PHASE 1 : Envoi de vrais SOL du portefeuille de l'utilisateur vers ton adresse de plateforme
-        async function depositSol() {
-            if (!walletConnected || !userWalletAddress) {
-                alert("Veuillez d'abord connecter votre wallet Phantom.");
-                return;
-            }
+function formatUSD(v) { return '$' + v.toLocaleString(undefined, {maximumFractionDigits:0}); }
+function formatSOL(v) { return v.toFixed(2); }
+function formatNum(v) { return v >= 1e6 ? (v/1e6).toFixed(1)+'M' : v.toLocaleString(); }
 
-            const amountInput = document.getElementById('depositAmount').value;
-            const amount = parseFloat(amountInput);
+function timeAgo(dateString) {
+  const sec = Math.floor((new Date() - new Date(dateString)) / 1000);
+  if (sec < 60) return 'just now';
+  const min = Math.floor(sec / 60);
+  if (min < 60) return min + 'm ago';
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return hr + 'h ago';
+  return Math.floor(hr / 24) + 'd ago';
+}
 
-            if (isNaN(amount) || amount <= 0) {
-                alert("Veuillez entrer un montant valide de SOL.");
-                return;
-            }
-
-            const statusTxt = document.getElementById('depositStatus');
-            statusTxt.style.color = "var(--primary)";
-            statusTxt.textContent = "Création de la transaction...";
-
-            try {
-                const fromPubkey = window.solana.publicKey;
-                const toPubkey = new solanaWeb3.PublicKey(PLATFORM_DEPOSIT_WALLET);
-
-                // 1. Définir l'instruction de transfert basique
-                const transaction = new solanaWeb3.Transaction().add(
-                    solanaWeb3.SystemProgram.transfer({
-                        fromPubkey: fromPubkey,
-                        toPubkey: toPubkey,
-                        lamports: amount * solanaWeb3.LAMPORTS_PER_SOL
-                    })
-                );
-
-                transaction.feePayer = fromPubkey;
-                
-                // 2. Récupérer le blockhash le plus récent
-                statusTxt.textContent = "Récupération du blockhash Solana...";
-                const { blockhash } = await connection.getLatestBlockhash();
-                transaction.recentBlockhash = blockhash;
-
-                // 3. Demander la signature et approuver via Phantom
-                statusTxt.textContent = "En attente d'approbation dans Phantom...";
-                const signedTransaction = await window.solana.signTransaction(transaction);
-                
-                // 4. Envoyer la transaction brute au réseau
-                statusTxt.textContent = "Envoi de la transaction sur la blockchain...";
-                const signature = await connection.sendRawTransaction(signedTransaction.serialize());
-
-                // 5. Confirmer la transaction
-                statusTxt.textContent = "Validation en cours (Blockchain confirmation)...";
-                await connection.confirmTransaction(signature, "confirmed");
-
-                statusTxt.style.color = "var(--green)";
-                statusTxt.textContent = `Succès ! Dépôt de ${amount} SOL confirmé. Sig: ${signature.slice(0,8)}...`;
-                
-                // Optionnel : Ici tu devras lier l'appel API Supabase pour créditer le compte
-                alert(`Dépôt validé ! ${amount} SOL ont été envoyés vers votre adresse de stockage.`);
-                
-                // Mise à jour visuelle des soldes
-                await updateWalletBalance();
-                closeModal('depositModal');
-
-            } catch (err) {
-                console.error("Erreur durant le dépôt :", err);
-                statusTxt.style.color = "var(--red)";
-                statusTxt.textContent = "Erreur ou annulation du dépôt.";
-            }
-        }
-
-        // Helpers Modales
-        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        function openDepositModal() {
-            document.getElementById('depositStatus').textContent = "";
-            openModal('depositModal');
-        }
-
-        // Fonction Mock Purement visuelle pour l'interface
-        function mockTrade(type) {
-            alert(`${type} : Cette action nécessite la configuration de ton moteur de trading interne rattaché à Supabase.`);
-        }
-    </script>
+/* ── APP INIT ── */
+window.addEventListener('DOMContentLoaded', () => {
+  seedTrades();
+  loadTokens();
+  initMainChart();
+  if (allTokens.length > 0) openToken(allTokens[0].id);
+  
+  // Custom click for user balance area to trigger info details
+  document.getElementById('walletBtn').addEventListener('click', (e) => {
+    if (walletAddress) { e.stopPropagation(); openWalletInfoModal(); }
+  });
+});
+</script>
 </body>
 </html>
