@@ -1640,16 +1640,29 @@ function seedTrades() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   MAIN CHART ENGINE
+   MAIN CHART ENGINE — Ultra-fast rugs.fun style
 ═══════════════════════════════════════════════════════════════ */
 let mainChart = null;
 let mainChartSeries = null;
 let mainChartPeriod = '1m';
-let simInterval = null;
+let simInterval  = null;
+let simInterval2 = null; // sub-tick for price line
 let simMultiplier = 1.0;
 let simBasePrice  = 0.000001;
 let simPrice      = 0.000001;
 let simCandles    = [];
+
+// Market regime — flips aggressively like real memecoins
+let regime = { bias:0.52, vol:0.038, duration:0, max:60 };
+
+function randomRegime() {
+  const r = Math.random();
+  if      (r < 0.25) return { bias:0.68, vol:0.055, duration:0, max:40  }; // strong pump
+  else if (r < 0.45) return { bias:0.32, vol:0.060, duration:0, max:30  }; // dump
+  else if (r < 0.65) return { bias:0.55, vol:0.045, duration:0, max:80  }; // slow pump
+  else if (r < 0.80) return { bias:0.40, vol:0.050, duration:0, max:50  }; // slow bleed
+  else               return { bias:0.50, vol:0.025, duration:0, max:100 }; // crab
+}
 
 function initMainChart() {
   const container = document.getElementById('mainChart');
@@ -1659,17 +1672,17 @@ function initMainChart() {
 
   mainChart = LightweightCharts.createChart(container, {
     layout: { background:{color:'transparent'}, textColor:'#5a6080' },
-    grid: { vertLines:{color:'#1a1d2e'}, horzLines:{color:'#1a1d2e'} },
+    grid: { vertLines:{color:'rgba(26,29,46,0.8)'}, horzLines:{color:'rgba(26,29,46,0.8)'} },
     crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-    rightPriceScale: { borderColor:'#23273c', scaleMargins:{top:0.1,bottom:0.1} },
-    timeScale: { borderColor:'#23273c', timeVisible:true, secondsVisible:false },
+    rightPriceScale: { borderColor:'#23273c', scaleMargins:{top:0.08,bottom:0.08}, minimumWidth:80 },
+    timeScale: { borderColor:'#23273c', timeVisible:true, secondsVisible:true },
     handleScroll: true, handleScale: true,
   });
 
   mainChartSeries = mainChart.addCandlestickSeries({
     upColor:'#32ff7e', downColor:'#ff4d6d',
     borderUpColor:'#32ff7e', borderDownColor:'#ff4d6d',
-    wickUpColor:'#32ff7e', wickDownColor:'#ff4d6d',
+    wickUpColor:'rgba(50,255,126,0.7)', wickDownColor:'rgba(255,77,109,0.7)',
   });
 
   const ro = new ResizeObserver(() => {
@@ -1679,62 +1692,80 @@ function initMainChart() {
   });
   ro.observe(container);
 
+  regime = randomRegime();
   seedHistoricalCandles();
   startSimulation();
 }
 
 function seedHistoricalCandles() {
-  const intervals = { '1m':60,'5m':300,'1h':3600,'1D':86400 };
-  const sec = intervals[mainChartPeriod] || 60;
+  const secMap = { '1m':60,'5m':300,'1h':3600,'1D':86400 };
+  const sec = secMap[mainChartPeriod] || 60;
   const now = Math.floor(Date.now()/1000);
   simCandles = [];
-  let p = 0.000001 * (0.5 + Math.random());
+
+  let p = 0.000001 * (0.3 + Math.random() * 1.4);
   simBasePrice = p;
   simPrice     = p;
 
-  // Market phases
-  const phases = [
-    {trend:1.0018, vol:0.012, len:20},  // accumulation
-    {trend:1.006,  vol:0.025, len:25},  // markup
-    {trend:1.002,  vol:0.018, len:15},  // distribution
-    {trend:0.997,  vol:0.022, len:20},  // markdown
-  ];
-  let phase=0, phaseCount=0;
+  // Seed 120 candles with regime changes
+  let reg = randomRegime();
+  for (let i = 119; i >= 0; i--) {
+    const t  = now - i * sec;
+    reg.duration++;
+    if (reg.duration > reg.max) reg = randomRegime();
 
-  for (let i=79; i>=0; i--) {
-    const t   = now - i*sec;
-    const ph  = phases[phase];
-    const dr  = ph.trend + (Math.random()-0.5)*ph.vol;
-    const o   = p;
-    const c   = p * dr * (1+(Math.random()-0.5)*0.008);
-    const hi  = Math.max(o,c) * (1+Math.random()*0.015);
-    const lo  = Math.min(o,c) * (1-Math.random()*0.015);
-    simCandles.push({ time:t, open:o, high:hi, low:lo, close:c });
-    p = c;
-    phaseCount++;
-    if (phaseCount > ph.len) { phase=(phase+1)%phases.length; phaseCount=0; }
+    // Multiple micro-moves per candle
+    let lo = p, hi = p, close = p;
+    const steps = 8;
+    for (let s = 0; s < steps; s++) {
+      const up   = Math.random() < reg.bias;
+      const move = 1 + (Math.random() * reg.vol) * (up ? 1 : -1);
+      // Occasional spike
+      const spike = Math.random() < 0.04 ? (up ? 1.08 : 0.93) : 1;
+      close = close * move * spike;
+      close = Math.max(close, p * 0.001);
+      hi = Math.max(hi, close);
+      lo = Math.min(lo, close);
+    }
+    const o  = p;
+    const wH = hi * (1 + Math.random() * 0.02);
+    const wL = lo * (1 - Math.random() * 0.02);
+    simCandles.push({ time:t, open:o, high:wH, low:wL, close });
+    p = close;
   }
+
   simPrice     = p;
   simBasePrice = simCandles[0].open;
-  if (mainChartSeries) mainChartSeries.setData(simCandles);
+  if (mainChartSeries) {
+    mainChartSeries.setData(simCandles);
+    mainChart.timeScale().scrollToRealTime();
+  }
   updateMultiplier();
 }
 
 function startSimulation() {
-  if (simInterval) clearInterval(simInterval);
-  const intervals = {'1m':800,'5m':1200,'1h':2000,'1D':3000};
-  const tickMs = intervals[mainChartPeriod]||800;
-  const sec    = {'1m':60,'5m':300,'1h':3600,'1D':86400}[mainChartPeriod]||60;
+  if (simInterval)  clearInterval(simInterval);
+  if (simInterval2) clearInterval(simInterval2);
+
+  // Fast tick: update current candle OHLC every 100ms
+  const secMap = { '1m':60,'5m':300,'1h':3600,'1D':86400 };
+  const sec = secMap[mainChartPeriod] || 60;
 
   simInterval = setInterval(() => {
-    const lastC = simCandles[simCandles.length-1];
-    const drift = 1 + (Math.random()-0.48)*0.018;
-    const spike = Math.random()<0.05 ? (Math.random()<0.5?1.04:0.96) : 1;
-    const newP  = simPrice * drift * spike;
-    simPrice    = Math.max(newP, 0.0000001);
+    // Regime change check
+    regime.duration++;
+    if (regime.duration > regime.max) regime = randomRegime();
 
-    const now = Math.floor(Date.now()/1000);
-    const bucketTime = Math.floor(now/sec)*sec;
+    // Price move
+    const up    = Math.random() < regime.bias;
+    const move  = 1 + (Math.random() * regime.vol) * (up ? 1 : -1);
+    const spike = Math.random() < 0.035 ? (Math.random() < 0.55 ? 1.06 : 0.94) : 1;
+    const newP  = simPrice * move * spike;
+    simPrice    = Math.max(newP, simBasePrice * 0.01);
+
+    const now        = Math.floor(Date.now() / 1000);
+    const bucketTime = Math.floor(now / sec) * sec;
+    const lastC      = simCandles[simCandles.length - 1];
 
     if (lastC && bucketTime === lastC.time) {
       lastC.close = simPrice;
@@ -1744,12 +1775,14 @@ function startSimulation() {
     } else {
       const newC = { time:bucketTime, open:simPrice, high:simPrice, low:simPrice, close:simPrice };
       simCandles.push(newC);
-      if (simCandles.length>120) simCandles.shift();
+      if (simCandles.length > 200) simCandles.shift();
       if (mainChartSeries) mainChartSeries.update(newC);
     }
+
     updateMultiplier();
     updateTokenBar();
-  }, tickMs);
+    updatePnlLive(); // live PnL update every tick
+  }, 100); // ← 100ms tick like rugs.fun
 }
 
 function updateMultiplier() {
@@ -1757,37 +1790,121 @@ function updateMultiplier() {
   simMultiplier = mult;
   const el = document.getElementById('multValue');
   if (!el) return;
-  const pct = Math.min(100, Math.max(0, (mult-0.5)/4*100));
-  const cls = mult>=2?'up': mult<1?'dn':'';
-  el.textContent = mult.toFixed(2)+'x';
-  el.className   = 'mult-value '+cls;
+  const pct = Math.min(100, Math.max(0, (mult - 0.2) / 9 * 100));
+  const cls = mult >= 2 ? 'up' : mult < 1 ? 'dn' : '';
+  el.textContent = mult >= 10 ? mult.toFixed(1)+'x' : mult.toFixed(2)+'x';
+  el.className   = 'mult-value ' + cls;
   document.querySelectorAll('.mult-bar-fill').forEach(f => {
-    f.style.width = pct+'%';
-    f.style.background = mult>=2 ? 'linear-gradient(90deg,var(--green),var(--accent2))' :
-                         mult<1  ? 'linear-gradient(90deg,var(--red),#ff8c00)' :
-                                   'linear-gradient(90deg,var(--green),var(--gold))';
+    f.style.width = pct + '%';
+    f.style.background =
+      mult >= 3 ? 'linear-gradient(90deg,var(--green),var(--accent2))' :
+      mult < 1  ? 'linear-gradient(90deg,var(--red),#ff6600)' :
+                  'linear-gradient(90deg,var(--gold),var(--green))';
   });
 }
 
 function setMainPeriod(period, el) {
   mainChartPeriod = period;
-  document.querySelectorAll('.chart-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
-  if (simInterval) clearInterval(simInterval);
+  if (simInterval)  clearInterval(simInterval);
+  if (simInterval2) clearInterval(simInterval2);
+  regime = randomRegime();
   seedHistoricalCandles();
   startSimulation();
 }
 
 function updateTokenBar() {
   if (!currentToken) return;
-  const price = simPrice.toExponential(3);
-  const pct   = ((simPrice-simBasePrice)/simBasePrice*100).toFixed(2);
-  const sign  = pct>=0?'+':'';
+  const price = simPrice < 0.0001 ? simPrice.toExponential(3) : simPrice.toFixed(6);
+  const pct   = ((simPrice - simBasePrice) / simBasePrice * 100).toFixed(2);
+  const sign  = pct >= 0 ? '+' : '';
   const el  = document.getElementById('tbPrice');
   const chg = document.getElementById('tbChange');
-  if (el)  el.textContent  = '$'+price;
-  if (chg) { chg.textContent = sign+pct+'%'; chg.className='token-bar-change '+(pct>=0?'up':'dn'); }
+  if (el)  el.textContent = '$' + price;
+  if (chg) { chg.textContent = sign + pct + '%'; chg.className = 'token-bar-change ' + (pct >= 0 ? 'up' : 'dn'); }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   PnL TRACKER
+═══════════════════════════════════════════════════════════════ */
+// Each position: { tokenId, solSpent, tokensHeld, entryPrice, entryTime }
+let myPositions = {};
+
+function recordBuy(tokenId, solAmount, tokensReceived) {
+  const existing = myPositions[tokenId];
+  const ep = simPrice;
+  if (existing) {
+    const totalSol   = existing.solSpent + solAmount;
+    const totalToks  = existing.tokensHeld + tokensReceived;
+    existing.solSpent    = totalSol;
+    existing.tokensHeld  = totalToks;
+    existing.entryPrice  = ep; // use latest price as avg basis
+  } else {
+    myPositions[tokenId] = { solSpent:solAmount, tokensHeld:tokensReceived, entryPrice:ep, entryTime:Date.now() };
+  }
+  showPnlPanel(tokenId);
+}
+
+function recordSell(tokenId, solReceived) {
+  const pos = myPositions[tokenId];
+  if (!pos) return;
+  const pnl     = solReceived - pos.solSpent;
+  const pnlPct  = (pnl / pos.solSpent * 100).toFixed(1);
+  const won     = pnl >= 0;
+  showPnlResult(pnl, pnlPct, won, pos.solSpent, solReceived);
+  delete myPositions[tokenId];
+  hidePnlPanel();
+}
+
+function updatePnlLive() {
+  if (!currentToken || !myPositions[currentToken.id]) return;
+  const pos    = myPositions[currentToken.id];
+  const curVal = pos.tokensHeld * simPrice;      // current value in price units
+  // Simple ratio: current price vs entry price
+  const pnlPct = ((simPrice - pos.entryPrice) / pos.entryPrice * 100);
+  const pnlSol = pos.solSpent * (pnlPct / 100);
+  const won    = pnlPct >= 0;
+
+  const panel = document.getElementById('pnlPanel');
+  if (!panel) return;
+  panel.style.display = 'flex';
+  const sign = won ? '+' : '';
+  document.getElementById('pnlValue').textContent  = sign + pnlSol.toFixed(4) + ' SOL';
+  document.getElementById('pnlPct').textContent    = sign + pnlPct.toFixed(2) + '%';
+  document.getElementById('pnlValue').style.color  = won ? 'var(--green)' : 'var(--red)';
+  document.getElementById('pnlPct').style.color    = won ? 'var(--green)' : 'var(--red)';
+  document.getElementById('pnlEntry').textContent  = '$' + pos.entryPrice.toExponential(3);
+  document.getElementById('pnlCurrent').textContent= '$' + simPrice.toExponential(3);
+}
+
+function showPnlPanel(tokenId) {
+  const panel = document.getElementById('pnlPanel');
+  if (panel) panel.style.display = 'flex';
+}
+function hidePnlPanel() {
+  const panel = document.getElementById('pnlPanel');
+  if (panel) panel.style.display = 'none';
+}
+
+function showPnlResult(pnl, pnlPct, won, invested, received) {
+  const overlay = document.getElementById('pnlResultOverlay');
+  if (!overlay) return;
+  const sign = won ? '+' : '';
+  const emoji = won ? (Math.abs(parseFloat(pnlPct))>50?'🚀':'💰') : (Math.abs(parseFloat(pnlPct))>50?'💀':'📉');
+  document.getElementById('pnlResultEmoji').textContent  = emoji;
+  document.getElementById('pnlResultTitle').textContent  = won ? 'PROFIT!' : 'REKT!';
+  document.getElementById('pnlResultTitle').style.color  = won ? 'var(--green)' : 'var(--red)';
+  document.getElementById('pnlResultPnl').textContent    = sign + pnl.toFixed(4) + ' SOL';
+  document.getElementById('pnlResultPnl').style.color    = won ? 'var(--green)' : 'var(--red)';
+  document.getElementById('pnlResultPct').textContent    = sign + pnlPct + '%';
+  document.getElementById('pnlResultPct').style.color    = won ? 'var(--green)' : 'var(--red)';
+  document.getElementById('pnlResultInvested').textContent = invested.toFixed(4) + ' SOL';
+  document.getElementById('pnlResultReceived').textContent = received.toFixed(4) + ' SOL';
+  overlay.classList.add('open');
+  setTimeout(() => overlay.classList.remove('open'), 5000);
+}
+function closePnlResult() { document.getElementById('pnlResultOverlay').classList.remove('open'); }
 
 /* ═══════════════════════════════════════════════════════════════
    MODAL CHART
@@ -2041,17 +2158,26 @@ function executeTrade() {
   btn.disabled=true; btn.textContent='Processing…';
 
   setTimeout(() => {
+    const vSol = parseFloat(currentToken.virtual_sol_reserves)||30e9;
+    const vTok = parseFloat(currentToken.virtual_token_reserves)||1073e12;
+    let tokensOut = 0, solOut = 0;
+    if (tradeMode==='buy') {
+      const after = amount - amount*0.0025;
+      tokensOut = (after*1e9*vTok)/(vSol+after*1e9)/1e6;
+    } else {
+      solOut = (amount*1e6*vSol)/(vTok+amount*1e6)/1e9;
+    }
+
     const trade = {
       id:'tr'+Math.random().toString(36).slice(2),
       token_id:currentToken.id,
       wallet: walletAddress.slice(0,6)+'…'+walletAddress.slice(-4),
-      type:tradeMode, sol_amount:amount,
-      token_amount: amount*800000*(0.8+Math.random()*0.4),
+      type:tradeMode, sol_amount: tradeMode==='buy'?amount:solOut,
+      token_amount: tradeMode==='buy'?tokensOut:amount,
       created_at:new Date().toISOString()
     };
     allTrades.unshift(trade);
 
-    // Update token stats
     const tok = allTokens.find(x=>x.id===currentToken.id);
     if (tok) {
       if (tradeMode==='buy') {
@@ -2067,6 +2193,10 @@ function executeTrade() {
       currentToken = tok;
     }
 
+    // PnL tracking
+    if (tradeMode==='buy')  recordBuy(currentToken.id, amount, tokensOut);
+    if (tradeMode==='sell') recordSell(currentToken.id, solOut);
+
     showNotif(`${tradeMode==='buy'?'🟢 Bought':'🔴 Sold'} ${amount} ${tradeMode==='buy'?'SOL':currentToken.symbol}!`,'success');
     document.getElementById('tradeAmount').value='';
     updateEstimate();
@@ -2075,7 +2205,7 @@ function executeTrade() {
     updateStats();
     btn.disabled=false;
     updateTradeButton();
-  }, 900);
+  }, 600);
 }
 
 function quickTrade(mode) {
