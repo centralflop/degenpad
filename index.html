@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DegenSad — Memecoin Launchpad on Solana</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -1555,458 +1555,310 @@ footer a:hover { color: var(--green); }
 
 <script>
 /* ═══════════════════════════════════════════════════════════════
-   SUPABASE CONFIG
+   DEGENSAD — FULL LOCAL SIMULATION (no backend required)
 ═══════════════════════════════════════════════════════════════ */
-const SUPABASE_URL = 'https://qvepwndfkprxrvqgvcpn.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_Wg4OmQTGDl8NeJFBrNwxQQ_e50az--_';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-/* ═══════════════════════════════════════════════════════════════
-   GLOBAL STATE
-═══════════════════════════════════════════════════════════════ */
+/* ── GLOBAL STATE ── */
 let walletAddress = null;
 let walletBalance = 0;
 let walletType    = null;
 let currentToken  = null;
 let tradeMode     = 'buy';
 let currentFilter = 'all';
-let allTokens     = [];
 
-// Modal chart state
-let modalChart = null;
-let modalChartSeries = null;
-let modalChartPeriod = '1m';
+/* ── SIMULATED TOKEN DB ── */
+let allTokens = [
+  { id:'t1', name:'DogeMoon', symbol:'DGMN', emoji:'🐶',
+    description:'The doge that never stopped. To the moon and beyond.',
+    virtual_sol_reserves:32e9, virtual_token_reserves:1040e12,
+    real_sol_reserves:28.4, total_supply:1e15,
+    market_cap:142000, volume_24h:34.2, holders:812,
+    graduated:false, created_at: new Date(Date.now()-7200000).toISOString(),
+    twitter:'@dogemoon', telegram:'t.me/dogemoon', website:'dogemoon.lol' },
+  { id:'t2', name:'PepeKing', symbol:'PPKG', emoji:'🐸',
+    description:'The true king of all pepes. Bow down.',
+    virtual_sol_reserves:45e9, virtual_token_reserves:980e12,
+    real_sol_reserves:67.1, total_supply:1e15,
+    market_cap:890000, volume_24h:128.9, holders:2341,
+    graduated:false, created_at: new Date(Date.now()-14400000).toISOString(),
+    twitter:'@pepeking', telegram:'t.me/pepeking', website:'pepeking.wtf' },
+  { id:'t3', name:'BonkInu', symbol:'BNKI', emoji:'⚡',
+    description:'Faster than Bonk. Stronger than Inu.',
+    virtual_sol_reserves:50e9, virtual_token_reserves:900e12,
+    real_sol_reserves:80.5, total_supply:1e15,
+    market_cap:2100000, volume_24h:412.3, holders:5780,
+    graduated:false, created_at: new Date(Date.now()-86400000).toISOString(),
+    twitter:'@bonkinu', telegram:'', website:'bonkinu.io' },
+  { id:'t4', name:'SadFrog', symbol:'SADF', emoji:'😢',
+    description:'Only down only sad. Buy the dip.',
+    virtual_sol_reserves:30.5e9, virtual_token_reserves:1070e12,
+    real_sol_reserves:3.2, total_supply:1e15,
+    market_cap:18000, volume_24h:6.1, holders:144,
+    graduated:false, created_at: new Date(Date.now()-1800000).toISOString(),
+    twitter:'', telegram:'', website:'' },
+  { id:'t5', name:'DiamondPaws', symbol:'DPAW', emoji:'💎',
+    description:'Diamond hands, diamond paws. Never sell.',
+    virtual_sol_reserves:55e9, virtual_token_reserves:850e12,
+    real_sol_reserves:84.9, total_supply:1e15,
+    market_cap:3800000, volume_24h:680.0, holders:9200,
+    graduated:false, created_at: new Date(Date.now()-172800000).toISOString(),
+    twitter:'@dpaw', telegram:'t.me/dpaw', website:'diamondpaws.com' },
+  { id:'t6', name:'RocketCat', symbol:'RCAT', emoji:'🚀',
+    description:'A cat on a rocket. Simple. Effective. Based.',
+    virtual_sol_reserves:31e9, virtual_token_reserves:1060e12,
+    real_sol_reserves:12.7, total_supply:1e15,
+    market_cap:64000, volume_24h:18.4, holders:390,
+    graduated:false, created_at: new Date(Date.now()-3600000).toISOString(),
+    twitter:'@rocketcat', telegram:'', website:'' },
+];
 
-// Main chart (demo simulation)
+let allTrades = [];
+let allComments = {};
+
+/* ── SEED SOME TRADES ── */
+const WALLETS = ['Ax7k…3mPq','Bz9f…7rNt','Cy2m…1sKw','Dm4p…9uLx','En6q…2vMy','Fk8r…4wNz','Gp0s…6xOa'];
+function seedTrades() {
+  const types = ['buy','buy','buy','sell','buy'];
+  allTokens.forEach(t => {
+    for (let i=0; i<8; i++) {
+      const type = types[Math.floor(Math.random()*types.length)];
+      const sol  = parseFloat((Math.random()*5+0.1).toFixed(3));
+      const tok  = sol * 800000 * (0.8+Math.random()*0.4);
+      allTrades.push({
+        id: 'tr'+Math.random().toString(36).slice(2),
+        token_id: t.id,
+        wallet: WALLETS[Math.floor(Math.random()*WALLETS.length)],
+        type, sol_amount: sol, token_amount: tok,
+        created_at: new Date(Date.now()-Math.random()*3600000*24).toISOString()
+      });
+    }
+    allComments[t.id] = [
+      { wallet:'Ax7k…3mPq', content:'This is the one. LFG 🚀', created_at: new Date(Date.now()-7200000).toISOString() },
+      { wallet:'Bz9f…7rNt', content:'Bought a bag. Not selling.', created_at: new Date(Date.now()-3600000).toISOString() },
+    ];
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MAIN CHART ENGINE
+═══════════════════════════════════════════════════════════════ */
 let mainChart = null;
 let mainChartSeries = null;
 let mainChartPeriod = '1m';
 let simInterval = null;
 let simMultiplier = 1.0;
 let simBasePrice  = 0.000001;
+let simPrice      = 0.000001;
+let simCandles    = [];
 
-/* ═══════════════════════════════════════════════════════════════
-   DEMO CHART ENGINE
-   Generates realistic candlestick market simulation
-═══════════════════════════════════════════════════════════════ */
 function initMainChart() {
   const container = document.getElementById('mainChart');
   if (!container) return;
   container.innerHTML = '';
-  if (mainChart) { mainChart.remove(); mainChart = null; }
+  if (mainChart) { try { mainChart.remove(); } catch(e){} mainChart = null; }
 
   mainChart = LightweightCharts.createChart(container, {
-    width:  container.clientWidth,
-    height: container.clientHeight || 300,
-    layout: {
-      background: { color: 'transparent' },
-      textColor: '#5a6080',
-    },
-    grid: {
-      vertLines: { color: '#1e2238' },
-      horzLines: { color: '#1e2238' },
-    },
+    layout: { background:{color:'transparent'}, textColor:'#5a6080' },
+    grid: { vertLines:{color:'#1a1d2e'}, horzLines:{color:'#1a1d2e'} },
     crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-    rightPriceScale: { borderColor: '#23273c', textColor: '#5a6080' },
-    timeScale: {
-      borderColor: '#23273c',
-      timeVisible: true,
-      secondsVisible: false,
-    },
+    rightPriceScale: { borderColor:'#23273c', scaleMargins:{top:0.1,bottom:0.1} },
+    timeScale: { borderColor:'#23273c', timeVisible:true, secondsVisible:false },
+    handleScroll: true, handleScale: true,
   });
 
   mainChartSeries = mainChart.addCandlestickSeries({
-    upColor:        '#32ff7e',
-    downColor:      '#ff4d6d',
-    borderUpColor:  '#32ff7e',
-    borderDownColor:'#ff4d6d',
-    wickUpColor:    '#32ff7e',
-    wickDownColor:  '#ff4d6d',
+    upColor:'#32ff7e', downColor:'#ff4d6d',
+    borderUpColor:'#32ff7e', borderDownColor:'#ff4d6d',
+    wickUpColor:'#32ff7e', wickDownColor:'#ff4d6d',
   });
 
-  // Responsive resize
-  const resizeObs = new ResizeObserver(() => {
-    mainChart.applyOptions({ width: container.clientWidth, height: container.clientHeight });
+  const ro = new ResizeObserver(() => {
+    if (mainChart && container.clientWidth) {
+      mainChart.applyOptions({ width: container.clientWidth, height: container.clientHeight });
+    }
   });
-  resizeObs.observe(container);
+  ro.observe(container);
 
-  // Seed historical candles
   seedHistoricalCandles();
   startSimulation();
 }
 
-// Volatility presets for realism
-const VOLATILITY = { '1m': 0.018, '5m': 0.032, '1h': 0.055, '1D': 0.09 };
-const PERIOD_MS  = { '1m': 60000, '5m': 300000, '1h': 3600000, '1D': 86400000 };
-
 function seedHistoricalCandles() {
-  const period = PERIOD_MS[mainChartPeriod] / 1000;
-  const now    = Math.floor(Date.now() / 1000);
-  const vol    = VOLATILITY[mainChartPeriod];
-  const candles = [];
-  let price = simBasePrice;
-  const count = 80;
+  const intervals = { '1m':60,'5m':300,'1h':3600,'1D':86400 };
+  const sec = intervals[mainChartPeriod] || 60;
+  const now = Math.floor(Date.now()/1000);
+  simCandles = [];
+  let p = 0.000001 * (0.5 + Math.random());
+  simBasePrice = p;
+  simPrice     = p;
 
-  // Market phases: accumulation, markup, distribution, markdown
-  const phaseLen = Math.floor(count / 4);
-  for (let i = 0; i < count; i++) {
-    const phase = Math.floor(i / phaseLen);
-    let trend = [0.0002, 0.0015, -0.0005, -0.001][phase] || 0;
-    const open  = price;
-    const noise = (Math.random() - 0.5) * vol;
-    const close = open * (1 + trend + noise);
-    const hi    = Math.max(open, close) * (1 + Math.random() * vol * 0.4);
-    const lo    = Math.min(open, close) * (1 - Math.random() * vol * 0.4);
-    candles.push({
-      time:  now - (count - i) * period,
-      open:  +open.toFixed(10),
-      high:  +hi.toFixed(10),
-      low:   +lo.toFixed(10),
-      close: +close.toFixed(10),
-    });
-    price = close;
+  // Market phases
+  const phases = [
+    {trend:1.0018, vol:0.012, len:20},  // accumulation
+    {trend:1.006,  vol:0.025, len:25},  // markup
+    {trend:1.002,  vol:0.018, len:15},  // distribution
+    {trend:0.997,  vol:0.022, len:20},  // markdown
+  ];
+  let phase=0, phaseCount=0;
+
+  for (let i=79; i>=0; i--) {
+    const t   = now - i*sec;
+    const ph  = phases[phase];
+    const dr  = ph.trend + (Math.random()-0.5)*ph.vol;
+    const o   = p;
+    const c   = p * dr * (1+(Math.random()-0.5)*0.008);
+    const hi  = Math.max(o,c) * (1+Math.random()*0.015);
+    const lo  = Math.min(o,c) * (1-Math.random()*0.015);
+    simCandles.push({ time:t, open:o, high:hi, low:lo, close:c });
+    p = c;
+    phaseCount++;
+    if (phaseCount > ph.len) { phase=(phase+1)%phases.length; phaseCount=0; }
   }
-  simBasePrice = price;
-  mainChartSeries.setData(candles);
-  mainChart.timeScale().fitContent();
-  updateMultiplier(price, simBasePrice * 0.9);
+  simPrice     = p;
+  simBasePrice = simCandles[0].open;
+  if (mainChartSeries) mainChartSeries.setData(simCandles);
+  updateMultiplier();
 }
-
-let currentCandle = null;
-let simPrice = simBasePrice;
 
 function startSimulation() {
   if (simInterval) clearInterval(simInterval);
+  const intervals = {'1m':800,'5m':1200,'1h':2000,'1D':3000};
+  const tickMs = intervals[mainChartPeriod]||800;
+  const sec    = {'1m':60,'5m':300,'1h':3600,'1D':86400}[mainChartPeriod]||60;
 
-  // Create first live candle
-  const now = Math.floor(Date.now() / 1000);
-  const period = PERIOD_MS[mainChartPeriod] / 1000;
-  const bucketStart = Math.floor(now / period) * period;
-
-  currentCandle = {
-    time:  bucketStart,
-    open:  simPrice,
-    high:  simPrice,
-    low:   simPrice,
-    close: simPrice,
-  };
-  mainChartSeries.update(currentCandle);
-
-  // Tick every 800ms
   simInterval = setInterval(() => {
-    const vol = VOLATILITY[mainChartPeriod];
-    const drift = (Math.random() - 0.485) * vol; // slight upward bias
-    const spike = Math.random() < 0.04 ? (Math.random() - 0.5) * vol * 3 : 0;
-    simPrice = Math.max(1e-12, simPrice * (1 + drift + spike));
+    const lastC = simCandles[simCandles.length-1];
+    const drift = 1 + (Math.random()-0.48)*0.018;
+    const spike = Math.random()<0.05 ? (Math.random()<0.5?1.04:0.96) : 1;
+    const newP  = simPrice * drift * spike;
+    simPrice    = Math.max(newP, 0.0000001);
 
-    const t = Math.floor(Date.now() / 1000);
-    const bucketStart = Math.floor(t / period) * period;
+    const now = Math.floor(Date.now()/1000);
+    const bucketTime = Math.floor(now/sec)*sec;
 
-    if (currentCandle && bucketStart > currentCandle.time) {
-      // New candle
-      currentCandle = {
-        time:  bucketStart,
-        open:  simPrice,
-        high:  simPrice,
-        low:   simPrice,
-        close: simPrice,
-      };
-    } else if (currentCandle) {
-      currentCandle.high  = Math.max(currentCandle.high, simPrice);
-      currentCandle.low   = Math.min(currentCandle.low,  simPrice);
-      currentCandle.close = simPrice;
+    if (lastC && bucketTime === lastC.time) {
+      lastC.close = simPrice;
+      lastC.high  = Math.max(lastC.high, simPrice);
+      lastC.low   = Math.min(lastC.low,  simPrice);
+      if (mainChartSeries) mainChartSeries.update(lastC);
+    } else {
+      const newC = { time:bucketTime, open:simPrice, high:simPrice, low:simPrice, close:simPrice };
+      simCandles.push(newC);
+      if (simCandles.length>120) simCandles.shift();
+      if (mainChartSeries) mainChartSeries.update(newC);
     }
-    if (currentCandle) mainChartSeries.update(currentCandle);
-    updateMultiplier(simPrice, simBasePrice);
+    updateMultiplier();
     updateTokenBar();
-  }, 800);
+  }, tickMs);
 }
 
-function updateMultiplier(current, base) {
-  const mult = current / base;
+function updateMultiplier() {
+  const mult = simPrice / simBasePrice;
   simMultiplier = mult;
-  const pct  = Math.min(100, ((mult - 0.5) / 3) * 100);
-  const el   = document.getElementById('multValue');
-  const fill = document.getElementById('multFill');
-  const fill2 = document.getElementById('multFill2');
+  const el = document.getElementById('multValue');
   if (!el) return;
-  el.textContent = mult.toFixed(2) + 'x';
-  el.className = 'mult-value ' + (mult >= 1 ? 'up' : 'dn');
-  [fill, fill2].forEach(f => { if (f) f.style.width = Math.max(3, pct) + '%'; });
-}
-
-function updateTokenBar() {
-  if (!currentToken) return;
-  const price = simPrice.toExponential(3);
-  const pct   = ((simPrice - simBasePrice) / simBasePrice * 100).toFixed(2);
-  const sign  = pct >= 0 ? '+' : '';
-  const el    = document.getElementById('tbPrice');
-  const chg   = document.getElementById('tbChange');
-  if (el)  el.textContent = '$' + price;
-  if (chg) { chg.textContent = sign + pct + '%'; chg.className = 'token-bar-change ' + (pct >= 0 ? 'up' : 'dn'); }
+  const pct = Math.min(100, Math.max(0, (mult-0.5)/4*100));
+  const cls = mult>=2?'up': mult<1?'dn':'';
+  el.textContent = mult.toFixed(2)+'x';
+  el.className   = 'mult-value '+cls;
+  document.querySelectorAll('.mult-bar-fill').forEach(f => {
+    f.style.width = pct+'%';
+    f.style.background = mult>=2 ? 'linear-gradient(90deg,var(--green),var(--accent2))' :
+                         mult<1  ? 'linear-gradient(90deg,var(--red),#ff8c00)' :
+                                   'linear-gradient(90deg,var(--green),var(--gold))';
+  });
 }
 
 function setMainPeriod(period, el) {
   mainChartPeriod = period;
-  document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.chart-tab').forEach(t=>t.classList.remove('active'));
   el.classList.add('active');
   if (simInterval) clearInterval(simInterval);
   seedHistoricalCandles();
   startSimulation();
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   WALLET — MetaMask + Phantom (full implementation)
-═══════════════════════════════════════════════════════════════ */
-
-// Close menu on outside click
-document.addEventListener('click', e => {
-  if (!e.target.closest('#walletBtn') && !e.target.closest('#walletMenu')) {
-    document.getElementById('walletMenu').classList.remove('open');
-  }
-});
-
-function toggleWalletMenu() {
-  if (walletAddress) {
-    showWalletInfoModal();
-    return;
-  }
-  detectWallets();
-  document.getElementById('walletMenu').classList.toggle('open');
-}
-
-// Detect which wallets are available and update UI hints
-function detectWallets() {
-  const hasPhantom  = !!(window.solana?.isPhantom || window.phantom?.solana);
-  const hasMetaMask = !!(window.ethereum?.isMetaMask || window.ethereum);
-  const phantomBtn  = document.getElementById('phantomWalletBtn');
-  const mmBtn       = document.getElementById('mmWalletBtn');
-  if (phantomBtn) {
-    phantomBtn.querySelector('.wallet-status').textContent = hasPhantom ? '● Detected' : '○ Not installed';
-    phantomBtn.querySelector('.wallet-status').style.color = hasPhantom ? 'var(--green)' : 'var(--muted)';
-  }
-  if (mmBtn) {
-    mmBtn.querySelector('.wallet-status').textContent = hasMetaMask ? '● Detected' : '○ Not installed';
-    mmBtn.querySelector('.wallet-status').style.color = hasMetaMask ? 'var(--green)' : 'var(--muted)';
-  }
-}
-
-function setWalletUI(icon, addr, balance, unit) {
-  const short = unit === 'ETH'
-    ? addr.slice(0,6)+'…'+addr.slice(-4)
-    : addr.slice(0,4)+'…'+addr.slice(-4);
-  const btnText = icon + ' ' + short;
-  document.getElementById('walletBtn').innerHTML =
-    `<span>${btnText}</span><span style="font-size:9px;background:var(--green-dim);color:var(--green);padding:1px 5px;border-radius:3px;margin-left:4px">●</span>`;
-  const balText = balance ? parseFloat(balance).toFixed(4)+' '+unit : '– '+unit;
-  document.getElementById('panelBalance').textContent = balText;
-  document.getElementById('mainBalance').textContent  = balText;
-  updateTradeButton();
-}
-
-function disconnectWallet() {
-  // Attempt to disconnect Phantom if connected
-  if (walletType === 'phantom' && window.solana?.disconnect) {
-    window.solana.disconnect().catch(()=>{});
-  }
-  walletAddress = null;
-  walletBalance = 0;
-  walletType    = null;
-  document.getElementById('walletBtn').innerHTML = '⬡ Connect Wallet';
-  document.getElementById('panelBalance').textContent = 'Connect wallet';
-  document.getElementById('mainBalance').textContent  = '– SOL';
-  document.getElementById('walletMenu').classList.remove('open');
-  closeWalletInfoModal();
-  updateTradeButton();
-  showNotif('Wallet disconnected', 'error');
-}
-
-async function connectPhantom() {
-  document.getElementById('walletMenu').classList.remove('open');
-
-  // Support both window.solana and window.phantom.solana
-  const provider = window.phantom?.solana ?? window.solana;
-
-  if (!provider?.isPhantom) {
-    showNotif('Phantom not installed — opening download page…', 'error');
-    window.open('https://phantom.app/download', '_blank');
-    return;
-  }
-
-  try {
-    let resp;
-    // Already connected? use eager connect
-    if (provider.isConnected && provider.publicKey) {
-      resp = { publicKey: provider.publicKey };
-    } else {
-      resp = await provider.connect();
-    }
-
-    walletAddress = resp.publicKey.toString();
-    walletType    = 'phantom';
-
-    // Try to get SOL balance (best-effort, won't fail if RPC unavailable)
-    try {
-      const res = await fetch('https://api.mainnet-beta.solana.com', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({jsonrpc:'2.0',id:1,method:'getBalance',params:[walletAddress]})
-      });
-      const j = await res.json();
-      walletBalance = j.result?.value != null ? (j.result.value / 1e9).toFixed(4) : '–';
-    } catch { walletBalance = '–'; }
-
-    setWalletUI('👻', walletAddress, walletBalance, 'SOL');
-    showNotif('👻 Phantom connected: ' + walletAddress.slice(0,4)+'…'+walletAddress.slice(-4), 'success');
-
-    // Listen for account changes / disconnection
-    provider.on('disconnect', () => disconnectWallet());
-    provider.on('accountChanged', (pk) => {
-      if (!pk) { disconnectWallet(); return; }
-      walletAddress = pk.toString();
-      setWalletUI('👻', walletAddress, '–', 'SOL');
-      showNotif('👻 Phantom: account switched', 'success');
-    });
-
-  } catch (err) {
-    if (err.code === 4001) showNotif('Connection rejected by user', 'error');
-    else showNotif('Phantom connection failed: ' + (err.message||'Unknown error'), 'error');
-  }
-}
-
-async function connectMetaMask() {
-  document.getElementById('walletMenu').classList.remove('open');
-
-  // Support EIP-6963 providers + legacy window.ethereum
-  const provider = window.ethereum;
-
-  if (!provider) {
-    showNotif('MetaMask not installed — opening download page…', 'error');
-    window.open('https://metamask.io/download/', '_blank');
-    return;
-  }
-
-  try {
-    const accounts = await provider.request({ method: 'eth_requestAccounts' });
-    if (!accounts?.length) { showNotif('No accounts returned', 'error'); return; }
-
-    walletAddress = accounts[0];
-    walletType    = 'metamask';
-
-    // Fetch ETH balance
-    try {
-      const balHex = await provider.request({
-        method: 'eth_getBalance',
-        params:  [walletAddress, 'latest']
-      });
-      walletBalance = (parseInt(balHex, 16) / 1e18).toFixed(4);
-    } catch { walletBalance = '0'; }
-
-    // Get network info (nice to display)
-    let chainName = 'EVM';
-    try {
-      const chainId = await provider.request({ method: 'eth_chainId' });
-      const chains  = {
-        '0x1':'Ethereum','0x89':'Polygon','0x38':'BSC',
-        '0xa':'Optimism','0xa4b1':'Arbitrum','0x2105':'Base'
-      };
-      chainName = chains[chainId] || 'Chain '+parseInt(chainId,16);
-    } catch {}
-
-    setWalletUI('🦊', walletAddress, walletBalance, 'ETH');
-    showNotif(`🦊 MetaMask connected (${chainName}): ${walletAddress.slice(0,6)}…${walletAddress.slice(-4)}`, 'success');
-
-    // Events
-    provider.on('accountsChanged', (accs) => {
-      if (!accs?.length) { disconnectWallet(); return; }
-      walletAddress = accs[0];
-      provider.request({ method:'eth_getBalance', params:[walletAddress,'latest'] })
-        .then(h => { walletBalance = (parseInt(h,16)/1e18).toFixed(4); setWalletUI('🦊', walletAddress, walletBalance, 'ETH'); })
-        .catch(() => setWalletUI('🦊', walletAddress, '–', 'ETH'));
-      showNotif('🦊 MetaMask: account switched', 'success');
-    });
-
-    provider.on('chainChanged', () => {
-      showNotif('🦊 MetaMask: network changed — refreshing balance…', 'success');
-      provider.request({ method:'eth_getBalance', params:[walletAddress,'latest'] })
-        .then(h => { walletBalance = (parseInt(h,16)/1e18).toFixed(4); setWalletUI('🦊', walletAddress, walletBalance, 'ETH'); })
-        .catch(()=>{});
-    });
-
-    provider.on('disconnect', () => disconnectWallet());
-
-  } catch (err) {
-    if (err.code === 4001) showNotif('Connection rejected by user', 'error');
-    else if (err.code === -32002) showNotif('MetaMask request already pending — check extension', 'error');
-    else showNotif('MetaMask connection failed: ' + (err.message||'Unknown error'), 'error');
-  }
-}
-
-// Wallet info modal (shown when already connected and clicking button)
-function showWalletInfoModal() {
-  document.getElementById('walletInfoModal').classList.add('open');
-  const addr = walletAddress || '';
-  const unit = walletType === 'metamask' ? 'ETH' : 'SOL';
-  const icon = walletType === 'metamask' ? '🦊 MetaMask' : '👻 Phantom';
-  document.getElementById('wiAddress').textContent = addr;
-  document.getElementById('wiBalance').textContent = parseFloat(walletBalance||0).toFixed(4)+' '+unit;
-  document.getElementById('wiWalletType').textContent = icon;
-}
-function closeWalletInfoModal() {
-  document.getElementById('walletInfoModal').classList.remove('open');
-}
-
-function connectWallet() { toggleWalletMenu(); }
-
-/* ═══════════════════════════════════════════════════════════════
-   TICKER BAR
-═══════════════════════════════════════════════════════════════ */
-function buildTicker(tokens) {
-  const bar   = document.getElementById('tickerBar');
-  const inner = document.getElementById('tickerInner');
-  if (!tokens?.length) { bar.style.display='none'; return; }
-  const items = [...tokens,...tokens].map(t => {
-    const price = t.total_supply ? (t.market_cap||0)/t.total_supply : 0;
-    const priceStr = price>0 ? '$'+price.toExponential(2) : '$0';
-    const vol = t.volume_24h||0;
-    const cls = vol>0?'up':'dn', sign = vol>0?'+':'';
-    return `<span class="ticker-item"><span class="sym">$${t.symbol}</span> ${priceStr} <span class="${cls}">${sign}${vol.toFixed(2)} SOL</span></span>`;
-  }).join('');
-  inner.innerHTML = items;
-  bar.style.display = 'block';
+function updateTokenBar() {
+  if (!currentToken) return;
+  const price = simPrice.toExponential(3);
+  const pct   = ((simPrice-simBasePrice)/simBasePrice*100).toFixed(2);
+  const sign  = pct>=0?'+':'';
+  const el  = document.getElementById('tbPrice');
+  const chg = document.getElementById('tbChange');
+  if (el)  el.textContent  = '$'+price;
+  if (chg) { chg.textContent = sign+pct+'%'; chg.className='token-bar-change '+(pct>=0?'up':'dn'); }
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   LOAD TOKENS
+   MODAL CHART
 ═══════════════════════════════════════════════════════════════ */
-async function loadTokens() {
-  const { data, error } = await sb.from('tokens').select('*').order('created_at',{ascending:false});
-  if (error) { console.error(error); return; }
-  allTokens = data||[];
-  renderTokens(allTokens);
-  buildTicker(allTokens);
-  updateStats();
-  buildLeaderboard();
+let modalChart=null, modalChartSeries=null, modalChartPeriod='1m';
+
+function initModalChart(tokenId) {
+  const container = document.getElementById('tradeChart');
+  if (!container) return;
+  if (modalChart) { try{modalChart.remove();}catch(e){} modalChart=null; }
+  modalChart = LightweightCharts.createChart(container,{
+    layout:{background:{color:'transparent'},textColor:'#5a6080'},
+    grid:{vertLines:{color:'#1a1d2e'},horzLines:{color:'#1a1d2e'}},
+    rightPriceScale:{borderColor:'#23273c'},
+    timeScale:{borderColor:'#23273c',timeVisible:true},
+    width:container.clientWidth, height:260,
+  });
+  modalChartSeries = modalChart.addCandlestickSeries({
+    upColor:'#32ff7e',downColor:'#ff4d6d',
+    borderUpColor:'#32ff7e',borderDownColor:'#ff4d6d',
+    wickUpColor:'#32ff7e',wickDownColor:'#ff4d6d',
+  });
+  loadModalChartData();
 }
+
+function loadModalChartData() {
+  if (!modalChartSeries) return;
+  const sec={'1m':60,'5m':300,'1h':3600,'1D':86400}[modalChartPeriod]||60;
+  const now=Math.floor(Date.now()/1000);
+  const candles=[];
+  let p=0.000001*(0.5+Math.random());
+  for (let i=79;i>=0;i--) {
+    const t=now-i*sec;
+    const dr=1+(Math.random()-0.48)*0.022;
+    const o=p, c=p*dr;
+    const hi=Math.max(o,c)*(1+Math.random()*0.012);
+    const lo=Math.min(o,c)*(1-Math.random()*0.012);
+    candles.push({time:t,open:o,high:hi,low:lo,close:c});
+    p=c;
+  }
+  modalChartSeries.setData(candles);
+}
+
+function setChartPeriod(period, el) {
+  modalChartPeriod = period;
+  document.querySelectorAll('.m-chart-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  loadModalChartData();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TOKEN GRID
+═══════════════════════════════════════════════════════════════ */
 function renderTokens(tokens) {
   const grid = document.getElementById('tokenGrid');
   if (!tokens.length) {
-    grid.innerHTML = `<div class="empty-state"><div class="es-icon">😢</div><p>No tokens yet. Be the first to launch one!</p></div>`;
+    grid.innerHTML='<div class="empty-state"><div class="es-icon">😢</div><p>No tokens found.</p></div>';
     return;
   }
   grid.innerHTML = tokens.map(t => {
     const pct  = Math.min(100,(t.real_sol_reserves/85*100)).toFixed(1);
     const mcap = formatUSD(t.market_cap||0);
     const age  = timeAgo(t.created_at);
-    const emoji= getEmoji(t.name);
-    const imgTag = t.image_url ? `<img src="${t.image_url}" onerror="this.style.display='none'">` : emoji;
-    let badge = '';
+    let badge='';
     if (pct>=80) badge='<span class="card-badge badge-grad">🎓 Graduating</span>';
     else if (new Date()-new Date(t.created_at)<3600000) badge='<span class="card-badge badge-new">New</span>';
-    else if ((t.volume_24h||0)>5) badge='<span class="card-badge badge-hot">🔥 Hot</span>';
+    else if ((t.volume_24h||0)>50) badge='<span class="card-badge badge-hot">🔥 Hot</span>';
     return `
     <div class="token-card" onclick="openToken('${t.id}')">
       <div class="card-header">
-        <div class="token-avatar">${imgTag}</div>
+        <div class="token-avatar">${t.emoji||'🚀'}</div>
         <div><div class="token-name">${t.name}</div><div class="token-symbol">$${t.symbol}</div></div>
         ${badge}
       </div>
@@ -2021,559 +1873,504 @@ function renderTokens(tokens) {
     </div>`;
   }).join('');
 }
-async function updateStats() {
-  const {count:tc} = await sb.from('tokens').select('*',{count:'exact',head:true});
-  const {data:td}  = await sb.from('trades').select('sol_amount,type');
-  const trades = td||[];
+
+function loadTokens() {
+  renderTokens(allTokens);
+  buildTicker(allTokens);
+  updateStats();
+  buildLeaderboard();
+}
+
+function updateStats() {
+  const trades = allTrades;
   const volume = trades.reduce((s,t)=>s+parseFloat(t.sol_amount||0),0);
-  const {count:gc} = await sb.from('tokens').select('*',{count:'exact',head:true}).eq('graduated',true);
-  document.getElementById('statTokens').textContent   = tc||'0';
-  document.getElementById('statTrades').textContent   = trades.length;
-  document.getElementById('statVolume').textContent   = volume.toFixed(1);
-  document.getElementById('statGraduated').textContent= gc||'0';
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   LEADERBOARD (simulated + real)
-═══════════════════════════════════════════════════════════════ */
-const SIM_TRADERS = [
-  { addr:'Ax7k…3mPq', tag:'🐋 Whale',  pnl:+142.5, cls:'gold'   },
-  { addr:'Bz9f…7rNt', tag:'🦈 Shark',  pnl:+88.3,  cls:'silver' },
-  { addr:'Cy2m…1sKw', tag:'🦊 Degen',  pnl:+55.1,  cls:'bronze' },
-  { addr:'Dm4p…9uLx', tag:'🤖 Bot',    pnl:+22.7,  cls:''       },
-  { addr:'En6q…2vMy', tag:'🐸 Frog',   pnl:+11.2,  cls:''       },
-  { addr:'Fk8r…4wNz', tag:'🐻 Bear',   pnl:-8.4,   cls:''       },
-  { addr:'Gp0s…6xOa', tag:'💀 Rekt',   pnl:-31.9,  cls:''       },
-];
-function buildLeaderboard() {
-  const list = document.getElementById('lbList');
-  const avatars = ['🚀','💎','🐸','🦊','⚡','🐻','💀'];
-  list.innerHTML = SIM_TRADERS.map((t,i) => {
-    const rankCls = ['gold','silver','bronze'][i]||'';
-    const sign    = t.pnl>=0?'+':'';
-    return `
-    <div class="lb-item" style="animation-delay:${i*60}ms">
-      <div class="lb-rank ${rankCls}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)}</div>
-      <div class="lb-avatar" style="background:${['rgba(124,92,252,0.2)','rgba(50,255,126,0.15)','rgba(255,77,109,0.15)','rgba(255,204,0,0.12)','rgba(94,223,255,0.12)','rgba(124,92,252,0.1)','rgba(255,77,109,0.08)'][i]}">${avatars[i]}</div>
-      <div class="lb-info">
-        <div class="lb-addr">${t.addr}</div>
-        <div class="lb-tag">${t.tag}</div>
-      </div>
-      <div class="lb-pnl ${t.pnl>=0?'up':'dn'}">${sign}${t.pnl.toFixed(1)} SOL</div>
-    </div>`;
-  }).join('');
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   REALTIME
-═══════════════════════════════════════════════════════════════ */
-function setupRealtime() {
-  sb.channel('trades-rt')
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'trades'},(p) => {
-      addSidebarTrade(p.new);
-      if (currentToken && p.new.token_id===currentToken.id) {
-        addModalTrade(p.new);
-        refreshModalStats();
-      }
-    }).subscribe();
-  sb.channel('tokens-rt')
-    .on('postgres_changes',{event:'*',schema:'public',table:'tokens'},loadTokens)
-    .subscribe();
-}
-
-async function loadLiveTrades() {
-  const {data} = await sb.from('trades')
-    .select('*, tokens(name,symbol)')
-    .order('created_at',{ascending:false}).limit(8);
-  const c = document.getElementById('sidebarTrades');
-  if (!data?.length) { c.innerHTML='<div style="color:var(--muted2);font-size:11px;text-align:center;padding:10px">No trades yet</div>'; return; }
-  c.innerHTML = data.map(t=>buildSidebarTradeHTML(t)).join('');
-}
-function addSidebarTrade(trade) {
-  sb.from('tokens').select('name,symbol').eq('id',trade.token_id).single().then(({data})=>{
-    if (!data) return;
-    const c = document.getElementById('sidebarTrades');
-    c.insertAdjacentHTML('afterbegin',buildSidebarTradeHTML({...trade,tokens:data}));
-    const rows = c.querySelectorAll('.live-trade-item');
-    if (rows.length>8) rows[rows.length-1].remove();
-  });
-}
-function buildSidebarTradeHTML(t) {
-  const sym  = t.tokens?.symbol||'???';
-  const addr = t.wallet?t.wallet.slice(0,4)+'…'+t.wallet.slice(-4):'???';
-  const amt  = parseFloat(t.sol_amount).toFixed(3);
-  const cls  = t.type==='buy'?'buy':'sell';
-  return `
-  <div class="live-trade-item">
-    <span class="lt-type lt-${cls}">${t.type.toUpperCase()}</span>
-    <div><div class="lt-sym">$${sym}</div><div class="lt-addr">${addr}</div></div>
-    <span class="lt-amt ${cls}">${amt} SOL</span>
-  </div>`;
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   COMMUNITY CHAT (simulation + Supabase comments)
-═══════════════════════════════════════════════════════════════ */
-const CHAT_MSGS = [
-  {addr:'Ax7k…3mPq',tag:'whale',badge:'🐋 Whale',text:'just aped 5 SOL into $DOGE this is it frens 🚀'},
-  {addr:'Bz9f…7rNt',tag:'degen',badge:'💎 Degen',text:'ngmi if you\'re not buying this dip rn'},
-  {addr:'Cy2m…1sKw',tag:'',     badge:'',         text:'chart looking like a W formation, LFG'},
-  {addr:'Dm4p…9uLx',tag:'',     badge:'',         text:'wagmi ser, bonding curve at 45% already'},
-  {addr:'En6q…2vMy',tag:'degen',badge:'🦊 Degen', text:'who else is waiting for the 100x?? 👀'},
-  {addr:'Fk8r…4wNz',tag:'',     badge:'',         text:'bought the top again. I never learn 😭'},
-  {addr:'Gp0s…6xOa',tag:'whale',badge:'🐋 Whale', text:'sending it to Raydium soon, stack now'},
-  {addr:'Hq1t…8yPb',tag:'',     badge:'',         text:'this team is based, checked the contract'},
-  {addr:'Ir3u…0zQc',tag:'degen',badge:'💎 Degen', text:'diamond hands activated 💎'},
-  {addr:'Js5v…2aRd',tag:'',     badge:'',         text:'slippage at 15% still worth it anon'},
-];
-
-let chatMsgIdx = 0;
-let onlineCount = 47 + Math.floor(Math.random()*20);
-
-function initChat() {
-  document.getElementById('onlineCount').textContent = '● '+onlineCount+' online';
-  // Seed some chat history
-  const container = document.getElementById('chatMessages');
-  container.innerHTML = '';
-  const seedCount = Math.min(5, CHAT_MSGS.length);
-  for (let i=0; i<seedCount; i++) {
-    appendChatMsg(CHAT_MSGS[i], Date.now() - (seedCount-i)*90000);
-  }
-  chatMsgIdx = seedCount;
-  // Simulate incoming messages
-  setInterval(simulateChatMsg, 4500 + Math.random()*3000);
-  // Online fluctuation
-  setInterval(() => {
-    onlineCount = Math.max(20, onlineCount + Math.floor((Math.random()-0.45)*3));
-    document.getElementById('onlineCount').textContent = '● '+onlineCount+' online';
-  }, 8000);
-  scrollChat();
-}
-
-function simulateChatMsg() {
-  const msg = CHAT_MSGS[chatMsgIdx % CHAT_MSGS.length];
-  chatMsgIdx++;
-  appendChatMsg(msg, Date.now());
-}
-function appendChatMsg(msg, ts) {
-  const c = document.getElementById('chatMessages');
-  const colors = ['rgba(124,92,252,0.2)','rgba(50,255,126,0.15)','rgba(255,77,109,0.15)','rgba(255,204,0,0.12)','rgba(94,223,255,0.12)'];
-  const color  = colors[Math.abs(hashStr(msg.addr)) % colors.length];
-  const timeStr= timeAgo(new Date(ts));
-  const badgeHTML = msg.badge ? `<span class="chat-badge ${msg.tag==='whale'?'badge-whale':msg.tag==='degen'?'badge-degen':''}">${msg.badge}</span>` : '';
-  const div = document.createElement('div');
-  div.className = 'chat-msg';
-  div.innerHTML = `
-    <div class="chat-msg-header">
-      <div class="chat-avatar" style="background:${color}">${msg.addr.slice(0,2)}</div>
-      <span class="chat-addr ${msg.tag}">${msg.addr}</span>
-      ${badgeHTML}
-      <span class="chat-time">${timeStr}</span>
-    </div>
-    <div class="chat-text">${escapeHTML(msg.text)}</div>`;
-  c.appendChild(div);
-  // Keep last 30 messages
-  while (c.children.length > 30) c.removeChild(c.firstChild);
-  scrollChat();
-}
-function scrollChat() {
-  const c = document.getElementById('chatMessages');
-  requestAnimationFrame(() => { c.scrollTop = c.scrollHeight; });
-}
-function sendChat() {
-  const inp = document.getElementById('chatInput');
-  const text = inp.value.trim();
-  if (!text) return;
-  inp.value = '';
-  const addr = walletAddress
-    ? walletAddress.slice(0,4)+'…'+walletAddress.slice(-4)
-    : 'Anon_'+Math.random().toString(36).slice(2,6);
-  appendChatMsg({ addr, tag:'', badge:'', text }, Date.now());
-}
-function hashStr(s) { let h=0; for (const c of s) h=(h*31+c.charCodeAt(0))|0; return h; }
-
-/* ═══════════════════════════════════════════════════════════════
-   EVENTS (simulated)
-═══════════════════════════════════════════════════════════════ */
-const SIM_EVENTS = [
-  { icon:'🚀', text:'<strong>$PEPE</strong> just launched by Ax7k…', time:'2m' },
-  { icon:'💎', text:'<strong>5 SOL</strong> buy on $DOGE by Bz9f…',  time:'4m' },
-  { icon:'🎓', text:'<strong>$MOON</strong> graduated to Raydium!',   time:'12m'},
-  { icon:'🔥', text:'<strong>$CHAD</strong> trending — 42 holders',   time:'18m'},
-  { icon:'💀', text:'<strong>Gp0s…</strong> sold everything 😭',      time:'25m'},
-];
-function buildEvents() {
-  document.getElementById('eventList').innerHTML = SIM_EVENTS.map(e => `
-    <div class="event-item">
-      <span class="event-icon">${e.icon}</span>
-      <span class="event-text">${e.text}</span>
-      <span class="event-time">${e.time} ago</span>
-    </div>`).join('');
+  document.getElementById('statTokens').textContent    = allTokens.length;
+  document.getElementById('statTrades').textContent    = trades.length;
+  document.getElementById('statVolume').textContent    = volume.toFixed(1);
+  document.getElementById('statGraduated').textContent = allTokens.filter(t=>t.graduated).length;
 }
 
 /* ═══════════════════════════════════════════════════════════════
    TOKEN MODAL
 ═══════════════════════════════════════════════════════════════ */
-async function openToken(id) {
-  const {data:token} = await sb.from('tokens').select('*').eq('id',id).single();
-  if (!token) return;
-  currentToken = token;
+function openToken(id) {
+  const t = allTokens.find(x=>x.id===id);
+  if (!t) return;
+  currentToken = t;
+  const pct = Math.min(100,(t.real_sol_reserves/85*100)).toFixed(1);
+  const price = t.market_cap && t.total_supply ? (t.market_cap/t.total_supply) : 0.000001;
 
-  // Update top bar with token info
-  const emoji = getEmoji(token.name);
-  const tbAv  = document.getElementById('tbAvatar');
-  tbAv.innerHTML = token.image_url ? `<img src="${token.image_url}" onerror="this.parentElement.innerHTML='${emoji}'">` : emoji;
-  document.getElementById('tbName').textContent = token.name;
-  document.getElementById('tbSym').textContent  = `$${token.symbol} · ${formatSOL(token.virtual_sol_reserves/1e9)} SOL reserves`;
-  // Bonding in trade bar
-  const pct = Math.min(100,(parseFloat(token.real_sol_reserves||0)/85*100));
-  document.getElementById('mainBondFill').style.width = pct+'%';
-  document.getElementById('mainBondPct').textContent  = pct.toFixed(1)+'%';
-  document.getElementById('mainBondInfo').textContent = `${pct.toFixed(1)}% bonding curve filled`;
-
-  // Modal
-  document.getElementById('tokenModal').classList.add('open');
-  document.body.style.overflow = 'hidden';
-  // Avatar
-  const avatarEl = document.getElementById('modalAvatar');
-  avatarEl.innerHTML = token.image_url ? `<img src="${token.image_url}" onerror="this.innerHTML='${emoji}'">` : emoji;
-  document.getElementById('modalName').textContent    = token.name;
-  document.getElementById('modalSym').textContent     = `$${token.symbol} · ${formatSOL(token.virtual_sol_reserves/1e9)} SOL reserves`;
-  document.getElementById('modalMcap').textContent    = formatUSD(token.market_cap||0);
-  document.getElementById('modalVol').textContent     = formatSOL(token.volume_24h||0)+' SOL';
-  document.getElementById('modalHolders').textContent = token.holders||0;
-  const price = token.total_supply ? (token.market_cap||0)/token.total_supply : 0;
-  document.getElementById('modalPrice').textContent   = price>0?'$'+price.toExponential(3):'$0';
-  document.getElementById('modalCreator').textContent = token.creator_wallet?token.creator_wallet.slice(0,8)+'…':'Unknown';
-  document.getElementById('modalCreated').textContent = timeAgo(token.created_at);
+  document.getElementById('modalAvatar').textContent  = t.emoji||'🚀';
+  document.getElementById('modalName').textContent    = t.name;
+  document.getElementById('modalSym').textContent     = '$'+t.symbol;
+  document.getElementById('modalMcap').textContent    = formatUSD(t.market_cap||0);
+  document.getElementById('modalVol').textContent     = formatSOL(t.volume_24h||0)+' SOL';
+  document.getElementById('modalHolders').textContent = t.holders||0;
+  document.getElementById('modalPrice').textContent   = '$'+price.toExponential(3);
+  document.getElementById('modalCreator').textContent = 'DegenUser_'+t.id.toUpperCase();
+  document.getElementById('modalCreated').textContent = timeAgo(t.created_at);
   document.getElementById('modalBondFill').style.width= pct+'%';
-  document.getElementById('modalBondPct').textContent = pct.toFixed(1)+'%';
+  document.getElementById('modalBondPct').textContent = pct+'%';
 
-  initModalChart(token);
-  loadModalTrades(token.id);
-  loadComments(token.id);
+  // Token bar update
+  document.getElementById('tbAvatar').textContent = t.emoji||'🚀';
+  document.getElementById('tbName').textContent   = t.name;
+  document.getElementById('tbSym').textContent    = '$'+t.symbol;
+  document.getElementById('tbPrice').textContent  = '$'+price.toExponential(3);
+
+  document.getElementById('tokenModal').classList.add('open');
+  document.body.style.overflow='hidden';
+  initModalChart(id);
+  renderModalTrades(id);
+  renderComments(id);
   updateTradeButton();
-  updateEstimate();
 }
+
 function closeModal() {
   document.getElementById('tokenModal').classList.remove('open');
-  document.body.style.overflow = '';
-  currentToken = null;
-  if (modalChart) { modalChart.remove(); modalChart = null; modalChartSeries = null; }
+  document.body.style.overflow='';
 }
 
-/* Modal chart */
-async function initModalChart(token) {
-  const container = document.getElementById('tradeChart');
-  container.innerHTML = '';
-  if (modalChart) { modalChart.remove(); modalChart = null; }
-  modalChart = LightweightCharts.createChart(container, {
-    width:  container.clientWidth,
-    height: 260,
-    layout: { background:{color:'#1a1d2e'}, textColor:'#5a6080' },
-    grid:   { vertLines:{color:'#23273c'}, horzLines:{color:'#23273c'} },
-    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-    rightPriceScale: { borderColor:'#23273c' },
-    timeScale: { borderColor:'#23273c', timeVisible:true },
-  });
-  modalChartSeries = modalChart.addCandlestickSeries({
-    upColor:'#32ff7e', downColor:'#ff4d6d',
-    borderUpColor:'#32ff7e', borderDownColor:'#ff4d6d',
-    wickUpColor:'#32ff7e', wickDownColor:'#ff4d6d',
-  });
-  await loadModalChartData(token.id);
-}
-async function loadModalChartData(tokenId) {
-  const {data:trades} = await sb.from('trades')
-    .select('*').eq('token_id',tokenId).order('created_at',{ascending:true});
-  if (!trades?.length) {
-    const now = Math.floor(Date.now()/1000);
-    modalChartSeries.setData([{time:now-60,open:1e-6,high:1e-6,low:1e-6,close:1e-6}]);
-    return;
-  }
-  const intervalMs = {1m:60000,5m:300000,'1h':3600000,'1D':86400000}[modalChartPeriod]||60000;
-  const candles = buildCandles(trades, intervalMs);
-  if (candles.length) modalChartSeries.setData(candles);
-  modalChart.timeScale().fitContent();
-}
-function buildCandles(trades, intervalMs) {
-  if (!trades.length) return [];
-  const map = new Map();
-  let price = 1e-6;
-  trades.forEach(t => {
-    const ts       = new Date(t.created_at).getTime();
-    const bucket   = Math.floor(ts/intervalMs)*intervalMs/1000;
-    const solAmt   = parseFloat(t.sol_amount);
-    const tokenAmt = parseFloat(t.token_amount)||1;
-    price = t.type==='buy' ? solAmt/tokenAmt : price*(1-solAmt/100);
-    if (!map.has(bucket)) {
-      map.set(bucket,{time:bucket,open:price,high:price,low:price,close:price});
-    } else {
-      const c = map.get(bucket);
-      c.high  = Math.max(c.high,price);
-      c.low   = Math.min(c.low,price);
-      c.close = price;
-    }
-  });
-  return Array.from(map.values()).sort((a,b)=>a.time-b.time);
-}
-function setChartPeriod(period, el) {
-  modalChartPeriod = period;
-  document.querySelectorAll('.m-chart-tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  if (currentToken) loadModalChartData(currentToken.id);
+function renderModalTrades(tokenId) {
+  const trades = allTrades.filter(t=>t.token_id===tokenId).slice(-10).reverse();
+  const el = document.getElementById('modalTrades');
+  if (!trades.length) { el.innerHTML='<div style="color:var(--muted2);font-size:11px;padding:8px 0">No trades yet — be the first!</div>'; return; }
+  el.innerHTML = trades.map(t=>`
+    <div class="modal-trade-row">
+      <span style="color:${t.type==='buy'?'var(--green)':'var(--red)'};font-weight:700;width:34px">${t.type==='buy'?'BUY':'SELL'}</span>
+      <span style="color:var(--muted);font-size:10px;font-family:var(--font-mono)">${t.wallet}</span>
+      <span style="margin-left:auto;font-family:var(--font-mono);font-size:11px">${parseFloat(t.sol_amount).toFixed(3)} SOL</span>
+      <span style="color:var(--muted2);font-size:9px;margin-left:8px">${timeAgo(t.created_at)}</span>
+    </div>`).join('');
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   MODAL TRADES
-═══════════════════════════════════════════════════════════════ */
-async function loadModalTrades(tokenId) {
-  const {data} = await sb.from('trades')
-    .select('*').eq('token_id',tokenId)
-    .order('created_at',{ascending:false}).limit(20);
-  const c = document.getElementById('modalTrades');
-  if (!data?.length) { c.innerHTML='<div style="color:var(--muted2);font-size:11px;padding:8px 0">No trades yet — be the first!</div>'; return; }
-  c.innerHTML = data.map(buildModalTradeRow).join('');
-}
-function buildModalTradeRow(t) {
-  const cls  = t.type==='buy'?'buy':'sell';
-  const addr = t.wallet?t.wallet.slice(0,4)+'…'+t.wallet.slice(-4):'???';
-  const sol  = parseFloat(t.sol_amount||0).toFixed(3);
-  const age  = timeAgo(t.created_at);
-  return `
-  <div class="modal-trade-row">
-    <span class="lt-type lt-${cls}">${t.type.toUpperCase()}</span>
-    <span style="font-family:var(--font-mono);font-size:9px;color:var(--muted2)">${addr}</span>
-    <span class="lt-amt ${cls}" style="font-size:11px">${sol} SOL</span>
-    <span style="color:var(--muted2);font-size:10px;margin-left:auto">${age}</span>
-  </div>`;
-}
-function addModalTrade(trade) {
-  const c = document.getElementById('modalTrades');
-  if (c.querySelector('[style*="color:var"]')) c.innerHTML='';
-  c.insertAdjacentHTML('afterbegin',buildModalTradeRow(trade));
-}
-async function refreshModalStats() {
-  if (!currentToken) return;
-  const {data} = await sb.from('tokens').select('*').eq('id',currentToken.id).single();
-  if (!data) return;
-  currentToken = data;
-  document.getElementById('modalMcap').textContent    = formatUSD(data.market_cap||0);
-  document.getElementById('modalVol').textContent     = formatSOL(data.volume_24h||0)+' SOL';
-  document.getElementById('modalHolders').textContent = data.holders||0;
-  const pct = Math.min(100,parseFloat(data.real_sol_reserves||0)/85*100);
-  document.getElementById('modalBondFill').style.width= pct+'%';
-  document.getElementById('modalBondPct').textContent = pct.toFixed(1)+'%';
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   TRADE EXECUTION (modal)
+   TRADE LOGIC
 ═══════════════════════════════════════════════════════════════ */
 function setTradeMode(mode, el) {
   tradeMode = mode;
-  document.querySelectorAll('.trade-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.trade-tab').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
-  document.getElementById('tradeUnit').textContent = mode==='buy'?'SOL':(currentToken?.symbol||'TOKEN');
+  const unit = document.getElementById('tradeUnit');
+  if (unit) unit.textContent = mode==='buy' ? 'SOL' : (currentToken?.symbol||'TOKEN');
   updateEstimate();
   updateTradeButton();
 }
+
 function setAmount(v) {
-  document.getElementById('tradeAmount').value = v;
-  updateEstimate();
+  const el = document.getElementById('tradeAmount');
+  if (el) { el.value=v; updateEstimate(); }
 }
+
 function setAmt(id, v) {
-  document.getElementById(id).value = v;
-  updateEst();
+  const el = document.getElementById(id);
+  if (el) { el.value=v; updateEst(); }
 }
-function updateTradeButton() {
-  const btn = document.getElementById('tradeSubmitBtn');
-  if (!walletAddress) {
-    btn.textContent = 'Connect Wallet to Trade';
-    btn.disabled = false;
-    btn.onclick  = toggleWalletMenu;
-  } else {
-    btn.textContent = tradeMode==='buy'?'🟢 Buy':'🔴 Sell';
-    btn.disabled = false;
-    btn.onclick  = executeTrade;
-  }
-  btn.className = `trade-submit ${tradeMode}`;
-}
+
 function updateEstimate() {
   if (!currentToken) return;
-  const amount = parseFloat(document.getElementById('tradeAmount').value)||0;
-  calcAndShowEst(amount, tradeMode,
-    'estimateReceive','estimateImpact','estimateFee');
+  const amount = parseFloat(document.getElementById('tradeAmount')?.value||0);
+  if (!amount||amount<=0) {
+    ['estimateReceive','estimateImpact','estimateFee'].forEach(id=>{ const e=document.getElementById(id); if(e) e.textContent='–'; });
+    return;
+  }
+  const vSol=parseFloat(currentToken.virtual_sol_reserves)||30e9;
+  const vTok=parseFloat(currentToken.virtual_token_reserves)||1073e12;
+  let receive='', impact='';
+  const fee = (amount*0.0025).toFixed(4);
+  if (tradeMode==='buy') {
+    const after=amount-amount*0.0025;
+    const tok=(after*1e9*vTok)/(vSol+after*1e9)/1e6;
+    receive = formatNum(tok)+' '+(currentToken.symbol||'TOKEN');
+    impact  = (after/(vSol/1e9)*100).toFixed(2)+'%';
+  } else {
+    const sol=(amount*1e6*vSol)/(vTok+amount*1e6)/1e9;
+    receive = sol.toFixed(4)+' SOL';
+    impact  = (amount*1e6/vTok*100).toFixed(2)+'%';
+  }
+  const elR=document.getElementById('estimateReceive');
+  const elI=document.getElementById('estimateImpact');
+  const elF=document.getElementById('estimateFee');
+  if(elR) elR.textContent=receive;
+  if(elI) elI.textContent=impact;
+  if(elF) elF.textContent=fee+' SOL';
 }
+
 function updateEst() {
   if (!currentToken) return;
-  const amount = parseFloat(document.getElementById('buyAmount').value)||0;
-  calcAndShowEst(amount,'buy','estRcv','estImp','estFee');
+  const amount = parseFloat(document.getElementById('buyAmount')?.value||0);
+  const vSol=parseFloat(currentToken.virtual_sol_reserves)||30e9;
+  const vTok=parseFloat(currentToken.virtual_token_reserves)||1073e12;
+  if (!amount||amount<=0) {
+    ['estRcv','estImp','estFee'].forEach(id=>{ const e=document.getElementById(id); if(e) e.textContent='–'; });
+    return;
+  }
+  const after=amount-amount*0.0025;
+  const tok=(after*1e9*vTok)/(vSol+after*1e9)/1e6;
+  const elR=document.getElementById('estRcv');
+  const elI=document.getElementById('estImp');
+  const elF=document.getElementById('estFee');
+  if(elR) elR.textContent=formatNum(tok)+' '+(currentToken.symbol||'TOKEN');
+  if(elI) elI.textContent=(after/(vSol/1e9)*100).toFixed(2)+'%';
+  if(elF) elF.textContent=(amount*0.0025).toFixed(4)+' SOL';
 }
-function calcAndShowEst(amount, mode, rcvId, impId, feeId) {
-  const r = document.getElementById(rcvId);
-  const i = document.getElementById(impId);
-  const f = document.getElementById(feeId);
-  if (!r||!i||!f||!currentToken) return;
-  if (mode==='buy' && amount>0) {
-    const fee=amount*0.0025, after=amount-fee;
-    const vSol=parseFloat(currentToken.virtual_sol_reserves)||30e9;
-    const vTok=parseFloat(currentToken.virtual_token_reserves)||1073e12;
-    const out=(after*1e9*vTok)/(vSol+after*1e9);
-    r.textContent=formatNum(out/1e6)+' tokens';
-    i.textContent=((after*1e9/vSol)*100).toFixed(2)+'%';
-    f.textContent=fee.toFixed(4)+' SOL';
-  } else if (mode==='sell' && amount>0) {
-    const vSol=parseFloat(currentToken.virtual_sol_reserves)||30e9;
-    const vTok=parseFloat(currentToken.virtual_token_reserves)||1073e12;
-    const out=(amount*1e6*vSol)/(vTok+amount*1e6);
-    const fee=out*0.0025/1e9, net=out/1e9-fee;
-    r.textContent=net.toFixed(4)+' SOL';
-    i.textContent=((amount*1e6/vTok)*100).toFixed(2)+'%';
-    f.textContent=fee.toFixed(6)+' SOL';
+
+function updateTradeButton() {
+  const btn = document.getElementById('tradeSubmitBtn');
+  if (!btn) return;
+  if (!walletAddress) {
+    btn.textContent='Connect Wallet to Trade'; btn.className='trade-submit buy'; return;
+  }
+  if (!currentToken) {
+    btn.textContent='Select a token'; btn.className='trade-submit buy'; return;
+  }
+  if (tradeMode==='buy') {
+    btn.textContent='▲ BUY '+currentToken.symbol; btn.className='trade-submit buy';
   } else {
-    r.textContent=i.textContent=f.textContent='–';
+    btn.textContent='▼ SELL '+currentToken.symbol; btn.className='trade-submit sell';
   }
 }
 
-// Quick trade from main panel
-async function quickTrade(mode) {
-  if (!currentToken) { showNotif('Select a token first','error'); return; }
-  if (!walletAddress) { toggleWalletMenu(); return; }
-  const amount = parseFloat(document.getElementById('buyAmount').value);
-  if (!amount||amount<=0) { showNotif('Enter a valid amount','error'); return; }
-  const btn = mode==='buy' ? document.getElementById('mainBuyBtn') : document.getElementById('mainSellBtn');
-  btn.disabled = true; btn.textContent = 'Processing…';
-  try {
-    await runTrade(mode, amount);
-    showNotif(`${mode==='buy'?'🟢 Bought':'🔴 Sold'} ${amount} ${mode==='buy'?'SOL':currentToken.symbol}!`,'success');
-    document.getElementById('buyAmount').value='';
-    updateEst();
-  } catch(e) { showNotif('Trade failed: '+(e.message||'Unknown'),'error'); }
-  btn.disabled = false;
-  btn.textContent = mode==='buy'?'▲ BUY':'▼ SELL';
-}
-
-async function executeTrade() {
+function executeTrade() {
   if (!walletAddress) { connectWallet(); return; }
-  if (!currentToken) return;
-  const amount = parseFloat(document.getElementById('tradeAmount').value);
+  if (!currentToken)  { showNotif('Select a token first','error'); return; }
+  const amount = parseFloat(document.getElementById('tradeAmount')?.value||0);
   if (!amount||amount<=0) { showNotif('Enter a valid amount','error'); return; }
+
   const btn = document.getElementById('tradeSubmitBtn');
-  btn.disabled = true; btn.textContent='Processing…';
-  try {
-    await runTrade(tradeMode, amount);
+  btn.disabled=true; btn.textContent='Processing…';
+
+  setTimeout(() => {
+    const trade = {
+      id:'tr'+Math.random().toString(36).slice(2),
+      token_id:currentToken.id,
+      wallet: walletAddress.slice(0,6)+'…'+walletAddress.slice(-4),
+      type:tradeMode, sol_amount:amount,
+      token_amount: amount*800000*(0.8+Math.random()*0.4),
+      created_at:new Date().toISOString()
+    };
+    allTrades.unshift(trade);
+
+    // Update token stats
+    const tok = allTokens.find(x=>x.id===currentToken.id);
+    if (tok) {
+      if (tradeMode==='buy') {
+        tok.real_sol_reserves += amount;
+        tok.volume_24h += amount;
+        tok.holders += 1;
+        tok.market_cap = (tok.market_cap||0)+amount*1200;
+      } else {
+        tok.real_sol_reserves = Math.max(0,(tok.real_sol_reserves||0)-amount);
+        tok.volume_24h += amount;
+        tok.market_cap = Math.max(0,(tok.market_cap||0)-amount*900);
+      }
+      currentToken = tok;
+    }
+
     showNotif(`${tradeMode==='buy'?'🟢 Bought':'🔴 Sold'} ${amount} ${tradeMode==='buy'?'SOL':currentToken.symbol}!`,'success');
     document.getElementById('tradeAmount').value='';
     updateEstimate();
-    loadModalChartData(currentToken.id);
-    refreshModalStats();
-  } catch(e) { showNotif('Trade failed: '+(e.message||'Unknown'),'error'); }
-  btn.disabled = false;
-  updateTradeButton();
+    renderModalTrades(currentToken.id);
+    addLiveTrade(trade);
+    updateStats();
+    btn.disabled=false;
+    updateTradeButton();
+  }, 900);
 }
 
-async function runTrade(mode, amount) {
-  const vSol=parseFloat(currentToken.virtual_sol_reserves)||30e9;
-  const vTok=parseFloat(currentToken.virtual_token_reserves)||1073e12;
-  let tokAmt=0, solAmt=amount;
-  if (mode==='buy') {
-    const fee=amount*0.0025, after=amount-fee;
-    tokAmt=(after*1e9*vTok)/(vSol+after*1e9)/1e6;
-  } else {
-    tokAmt=amount;
-    solAmt=(amount*1e6*vSol)/(vTok+amount*1e6)/1e9;
-  }
-  const {error} = await sb.from('trades').insert({
-    token_id:currentToken.id, wallet:walletAddress,
-    type:mode, sol_amount:solAmt, token_amount:tokAmt,
-    tx_signature:'pending_'+Date.now()
-  });
-  if (error) throw error;
-  const newSol = mode==='buy'
-    ? parseFloat(currentToken.real_sol_reserves||0)+solAmt
-    : parseFloat(currentToken.real_sol_reserves||0)-solAmt;
-  await sb.from('tokens').update({
-    real_sol_reserves: Math.max(0,newSol),
-    volume_24h: (parseFloat(currentToken.volume_24h||0)+solAmt),
-    holders: (currentToken.holders||0)+(mode==='buy'?1:0)
-  }).eq('id',currentToken.id);
+function quickTrade(mode) {
+  if (!walletAddress) { showNotif('Connect wallet first!','error'); connectWallet(); return; }
+  if (!currentToken)  { showNotif('Select a token to trade','error'); return; }
+  const amount = parseFloat(document.getElementById('buyAmount')?.value||0);
+  if (!amount||amount<=0) { showNotif('Enter an amount','error'); return; }
+  const btn = mode==='buy' ? document.getElementById('mainBuyBtn') : document.getElementById('mainSellBtn');
+  btn.disabled=true; btn.textContent='Processing…';
+  setTimeout(() => {
+    const trade = {
+      id:'tr'+Math.random().toString(36).slice(2),
+      token_id:currentToken.id,
+      wallet:walletAddress.slice(0,6)+'…'+walletAddress.slice(-4),
+      type:mode, sol_amount:amount,
+      token_amount:amount*800000*(0.8+Math.random()*0.4),
+      created_at:new Date().toISOString()
+    };
+    allTrades.unshift(trade);
+    const tok=allTokens.find(x=>x.id===currentToken.id);
+    if (tok) {
+      tok.volume_24h  += amount;
+      tok.real_sol_reserves = Math.max(0,(tok.real_sol_reserves||0)+(mode==='buy'?amount:-amount));
+      tok.market_cap  = Math.max(0,(tok.market_cap||0)+(mode==='buy'?amount*1200:-amount*900));
+      currentToken=tok;
+    }
+    showNotif(`${mode==='buy'?'🟢 Bought':'🔴 Sold'} ${amount} ${mode==='buy'?'SOL':currentToken.symbol}!`,'success');
+    document.getElementById('buyAmount').value='';
+    updateEst();
+    addLiveTrade(trade);
+    updateStats();
+    btn.disabled=false;
+    btn.textContent = mode==='buy'?'▲ BUY':'▼ SELL';
+  },900);
 }
 
 /* ═══════════════════════════════════════════════════════════════
    COMMENTS
 ═══════════════════════════════════════════════════════════════ */
-async function loadComments(tokenId) {
-  const {data} = await sb.from('comments')
-    .select('*').eq('token_id',tokenId)
-    .order('created_at',{ascending:false}).limit(30);
-  const c = document.getElementById('commentsContainer');
-  if (!data?.length) { c.innerHTML='<div style="color:var(--muted2);font-size:11px">No comments yet.</div>'; return; }
-  c.innerHTML = data.map(cm => {
-    const addr = cm.wallet ? cm.wallet.slice(0,6)+'…'+cm.wallet.slice(-4) : 'Anonymous';
-    return `
+function renderComments(tokenId) {
+  const comments = (allComments[tokenId]||[]).slice().reverse();
+  const el = document.getElementById('commentsContainer');
+  if (!comments.length) { el.innerHTML='<div style="color:var(--muted2);font-size:11px">No comments yet.</div>'; return; }
+  el.innerHTML = comments.map(c=>`
     <div class="comment">
-      <div class="comment-addr">${addr}</div>
-      <div class="comment-text">${escapeHTML(cm.content)}</div>
-      <div class="comment-time">${timeAgo(cm.created_at)}</div>
-    </div>`;
-  }).join('');
+      <div class="comment-addr">${c.wallet}</div>
+      <div class="comment-text">${escapeHTML(c.content)}</div>
+      <div class="comment-time">${timeAgo(c.created_at)}</div>
+    </div>`).join('');
 }
-async function postComment() {
+
+function postComment() {
   if (!currentToken) return;
   const inp = document.getElementById('commentInput');
   const txt = inp.value.trim();
   if (!txt) return;
-  const wallet = walletAddress||'Anon_'+Math.random().toString(36).slice(2,8);
-  const {error} = await sb.from('comments').insert({token_id:currentToken.id,wallet,content:txt});
-  if (error) { showNotif('Failed to post comment','error'); return; }
+  const wallet = walletAddress ? walletAddress.slice(0,6)+'…'+walletAddress.slice(-4) : 'Anon_'+Math.random().toString(36).slice(2,8);
+  if (!allComments[currentToken.id]) allComments[currentToken.id]=[];
+  allComments[currentToken.id].push({ wallet, content:txt, created_at:new Date().toISOString() });
   inp.value='';
-  loadComments(currentToken.id);
+  renderComments(currentToken.id);
+  showNotif('Comment posted!','success');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LIVE TRADES SIDEBAR
+═══════════════════════════════════════════════════════════════ */
+function addLiveTrade(t) {
+  const el = document.getElementById('liveTrades');
+  if (!el) return;
+  const tok = allTokens.find(x=>x.id===t.token_id);
+  const sym = tok?.symbol||'???';
+  const row = document.createElement('div');
+  row.className='lb-item';
+  row.style.cssText='animation:fadeIn 0.3s ease;padding:8px 12px;border-bottom:1px solid var(--border)';
+  row.innerHTML=`
+    <span style="color:${t.type==='buy'?'var(--green)':'var(--red)'};font-weight:700;font-size:11px;width:30px">${t.type==='buy'?'BUY':'SELL'}</span>
+    <span style="font-family:var(--font-mono);font-size:10px;color:var(--muted);flex:1;margin:0 6px">$${sym}</span>
+    <span style="font-family:var(--font-mono);font-size:11px;font-weight:700">${parseFloat(t.sol_amount).toFixed(3)} SOL</span>`;
+  el.prepend(row);
+  // Keep max 20
+  while(el.children.length>20) el.removeChild(el.lastChild);
+}
+
+function loadLiveTrades() {
+  const el = document.getElementById('liveTrades');
+  if (!el) return;
+  const recent = allTrades.slice(0,12);
+  if (!recent.length) { el.innerHTML='<div style="color:var(--muted2);font-size:11px;padding:12px;text-align:center">No trades yet</div>'; return; }
+  recent.forEach(t => addLiveTrade(t));
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LEADERBOARD
+═══════════════════════════════════════════════════════════════ */
+const SIM_TRADERS = [
+  {addr:'Ax7k…3mPq',tag:'🐋 Whale', pnl:+142.5,cls:'gold'},
+  {addr:'Bz9f…7rNt',tag:'🦈 Shark', pnl:+88.3, cls:'silver'},
+  {addr:'Cy2m…1sKw',tag:'🦊 Degen', pnl:+55.1, cls:'bronze'},
+  {addr:'Dm4p…9uLx',tag:'🤖 Bot',   pnl:+22.7, cls:''},
+  {addr:'En6q…2vMy',tag:'🐸 Frog',  pnl:+11.2, cls:''},
+  {addr:'Fk8r…4wNz',tag:'🐻 Bear',  pnl:-8.4,  cls:''},
+  {addr:'Gp0s…6xOa',tag:'💀 Rekt',  pnl:-31.9, cls:''},
+];
+
+function buildLeaderboard() {
+  const list = document.getElementById('lbList');
+  if (!list) return;
+  const avatars=['🚀','💎','🐸','🦊','⚡','🐻','💀'];
+  const colors=['rgba(124,92,252,0.2)','rgba(50,255,126,0.15)','rgba(255,77,109,0.15)','rgba(255,204,0,0.12)','rgba(94,223,255,0.12)','rgba(124,92,252,0.1)','rgba(255,77,109,0.08)'];
+  list.innerHTML = SIM_TRADERS.map((t,i)=>`
+    <div class="lb-item" style="animation-delay:${i*60}ms">
+      <div class="lb-rank ${t.cls}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)}</div>
+      <div class="lb-avatar" style="background:${colors[i]}">${avatars[i]}</div>
+      <div class="lb-info">
+        <div class="lb-addr">${t.addr}</div>
+        <div class="lb-tag">${t.tag}</div>
+      </div>
+      <div class="lb-pnl ${t.pnl>=0?'up':'dn'}">${t.pnl>=0?'+':''}${t.pnl.toFixed(1)} SOL</div>
+    </div>`).join('');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TICKER BAR
+═══════════════════════════════════════════════════════════════ */
+function buildTicker(tokens) {
+  const bar   = document.getElementById('tickerBar');
+  const inner = document.getElementById('tickerInner');
+  if (!tokens?.length) { bar.style.display='none'; return; }
+  const items = [...tokens,...tokens].map(t=>{
+    const price=t.market_cap&&t.total_supply?(t.market_cap/t.total_supply):0;
+    const priceStr=price>0?'$'+price.toExponential(2):'$0';
+    const vol=t.volume_24h||0;
+    const cls=vol>0?'up':'dn', sign=vol>0?'+':'';
+    return `<span class="ticker-item"><span class="sym">$${t.symbol}</span> ${priceStr} <span class="${cls}">${sign}${vol.toFixed(2)} SOL</span></span>`;
+  }).join('');
+  inner.innerHTML=items;
+  bar.style.display='block';
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   COMMUNITY CHAT
+═══════════════════════════════════════════════════════════════ */
+const CHAT_USERS = [
+  {addr:'Ax7k…3mPq',badge:'whale',badgeLbl:'🐋 Whale',color:'#7c5cfc'},
+  {addr:'Bz9f…7rNt',badge:'degen',badgeLbl:'💎 Degen',color:'#5edfff'},
+  {addr:'Cy2m…1sKw',badge:'',     badgeLbl:'',         color:'#32ff7e'},
+  {addr:'Dm4p…9uLx',badge:'mod',  badgeLbl:'⚡ Mod',   color:'#ffcc00'},
+  {addr:'En6q…2vMy',badge:'',     badgeLbl:'',         color:'#ff4d6d'},
+];
+const CHAT_MSGS = [
+  'LFG 🚀🚀🚀','This is the one fr','Buy or cry later 💎','ser wen moon',
+  'Aping in rn ngmi if you dont','WAGMI fam','This looks like a 100x','pump incoming 👀',
+  'DYOR but this is clean','just bought a huge bag ngl','volume is heating up',
+  'whales accumulating rn','chart looking bullish af','im not selling ever',
+  'devs doxxed and based','liquidity locked 🔒','gem alert 🔔','community is based',
+];
+let onlineCount = Math.floor(Math.random()*80)+40;
+
+function initChat() {
+  updateOnlineCount();
+  buildEvents();
+  setInterval(()=>{
+    if (Math.random()<0.7) addSimChatMsg();
+  }, Math.random()*3000+4000);
+  setInterval(()=>{
+    onlineCount += Math.floor(Math.random()*7)-3;
+    onlineCount  = Math.max(20, Math.min(200, onlineCount));
+    updateOnlineCount();
+  }, 5000);
+}
+
+function updateOnlineCount() {
+  const el = document.getElementById('onlineCount');
+  if (el) el.textContent = '● '+onlineCount+' online';
+}
+
+function addSimChatMsg() {
+  const user = CHAT_USERS[Math.floor(Math.random()*CHAT_USERS.length)];
+  const msg  = CHAT_MSGS[Math.floor(Math.random()*CHAT_MSGS.length)];
+  appendChatMsg(user.addr, user.badge, user.badgeLbl, user.color, msg, 'now');
+  setTimeout(()=>{
+    if (Math.random()<0.7) addSimChatMsg();
+  }, Math.random()*4000+4000);
+}
+
+function appendChatMsg(addr, badge, badgeLbl, color, text, time) {
+  const el = document.getElementById('chatMessages');
+  if (!el) return;
+  const badgeHtml = badgeLbl ? `<span class="chat-badge badge-${badge}">${badgeLbl}</span>` : '';
+  const initials  = addr.slice(0,2).toUpperCase();
+  const div = document.createElement('div');
+  div.className='chat-msg';
+  div.innerHTML=`
+    <div class="chat-msg-header">
+      <div class="chat-avatar" style="background:${color}22;color:${color}">${initials}</div>
+      <span class="chat-addr ${badge}">${addr}</span>
+      ${badgeHtml}
+      <span class="chat-time">${time}</span>
+    </div>
+    <div class="chat-text">${escapeHTML(text)}</div>`;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+  // Keep max 50 msgs
+  while(el.children.length>50) el.removeChild(el.firstChild);
+}
+
+function sendChat() {
+  const inp = document.getElementById('chatInput');
+  const txt = inp.value.trim();
+  if (!txt) return;
+  const addr  = walletAddress ? walletAddress.slice(0,6)+'…'+walletAddress.slice(-4) : 'You';
+  const color = '#32ff7e';
+  appendChatMsg(addr,'','',color,txt,'now');
+  inp.value='';
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   EVENTS FEED
+═══════════════════════════════════════════════════════════════ */
+const EVENT_TEMPLATES = [
+  t=>`🚀 <strong>${t.name}</strong> just launched!`,
+  t=>`💰 Whale bought <strong>8.2 SOL</strong> of <strong>$${t.symbol}</strong>`,
+  t=>`📈 <strong>$${t.symbol}</strong> up <strong>+${(Math.random()*40+5).toFixed(0)}%</strong> in 1h`,
+  t=>`🔥 <strong>$${t.symbol}</strong> volume spiking!`,
+  t=>`🎓 <strong>$${t.symbol}</strong> approaching graduation`,
+  t=>`💎 New holder milestone: <strong>${t.name}</strong> hits ${(Math.floor(Math.random()*5)+1)*1000} holders`,
+];
+let eventItems=[];
+
+function buildEvents() {
+  const el = document.getElementById('eventList');
+  if (!el) return;
+  eventItems=[];
+  // Seed 3 events
+  for (let i=0;i<3;i++) addEvent();
+  setInterval(addEvent, 6000+Math.random()*4000);
+}
+
+function addEvent() {
+  const el = document.getElementById('eventList');
+  if (!el) return;
+  const tok = allTokens[Math.floor(Math.random()*allTokens.length)];
+  const tmpl = EVENT_TEMPLATES[Math.floor(Math.random()*EVENT_TEMPLATES.length)];
+  const icons=['🚀','💰','📈','🔥','🎓','💎'];
+  const icon  = icons[Math.floor(Math.random()*icons.length)];
+  const html  = tmpl(tok);
+  const mins  = Math.floor(Math.random()*59+1);
+
+  const item = document.createElement('div');
+  item.className='event-item';
+  item.style.animation='msgIn 0.3s ease';
+  item.innerHTML=`<span class="event-icon">${icon}</span><span class="event-text">${html}</span><span class="event-time">${mins}m ago</span>`;
+  el.prepend(item);
+  while(el.children.length>4) el.removeChild(el.lastChild);
 }
 
 /* ═══════════════════════════════════════════════════════════════
    CREATE TOKEN
 ═══════════════════════════════════════════════════════════════ */
-function openCreateModal()  { document.getElementById('createOverlay').classList.add('open');    document.body.style.overflow='hidden'; }
+function openCreateModal()  { document.getElementById('createOverlay').classList.add('open'); document.body.style.overflow='hidden'; }
 function closeCreateModal() { document.getElementById('createOverlay').classList.remove('open'); document.body.style.overflow=''; }
+
 function previewImage(inp) {
-  const file = inp.files[0]; if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
+  const file=inp.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
     const img=document.getElementById('imagePreview');
     img.src=e.target.result; img.style.display='block';
     document.getElementById('uploadPlaceholder').style.display='none';
   };
   reader.readAsDataURL(file);
 }
-async function createToken() {
+
+function createToken() {
   const name   = document.getElementById('createName').value.trim();
   const symbol = document.getElementById('createSymbol').value.trim().toUpperCase();
   if (!name||!symbol) { showNotif('Name and symbol are required','error'); return; }
-  if (!walletAddress)  { showNotif('Connect your wallet first!','error'); connectWallet(); return; }
-  const desc     = document.getElementById('createDesc').value.trim();
-  const twitter  = document.getElementById('createTwitter').value.trim();
-  const telegram = document.getElementById('createTelegram').value.trim();
-  const website  = document.getElementById('createWebsite').value.trim();
-  let imageUrl = null;
-  const fileInp = document.getElementById('imageFile');
-  if (fileInp.files[0]) {
-    const file = fileInp.files[0], ext=file.name.split('.').pop();
-    const path = `tokens/${Date.now()}.${ext}`;
-    const {error:upErr} = await sb.storage.from('token-images').upload(path,file);
-    if (!upErr) {
-      const {data:ud} = sb.storage.from('token-images').getPublicUrl(path);
-      imageUrl = ud.publicUrl;
-    }
-  }
-  const {data, error} = await sb.from('tokens').insert({
-    name, symbol, description:desc, image_url:imageUrl,
-    creator_wallet:walletAddress,
-    virtual_sol_reserves:30000000000, virtual_token_reserves:1073000000000000,
-    real_sol_reserves:0, total_supply:1000000000000000,
+
+  const emojis=['🚀','🐶','🐸','💎','🔥','🌙','⚡','💀','🦊','🐻','🦁','🐯','🍀','🎯'];
+  const emoji = emojis[Math.floor(Math.random()*emojis.length)];
+  const newToken = {
+    id: 'tok_'+Date.now(),
+    name, symbol, emoji,
+    description: document.getElementById('createDesc').value.trim(),
+    twitter:  document.getElementById('createTwitter').value.trim(),
+    telegram: document.getElementById('createTelegram').value.trim(),
+    website:  document.getElementById('createWebsite').value.trim(),
+    virtual_sol_reserves:30e9, virtual_token_reserves:1073e12,
+    real_sol_reserves:0, total_supply:1e15,
     market_cap:0, volume_24h:0, holders:0, graduated:false,
-    twitter, telegram, website
-  }).select().single();
-  if (error) { showNotif('Failed to create token: '+error.message,'error'); return; }
+    created_at: new Date().toISOString(),
+  };
+  allTokens.unshift(newToken);
+  allComments[newToken.id]=[];
   closeCreateModal();
   showNotif(`🚀 ${name} launched successfully!`,'success');
   ['createName','createDesc','createTwitter','createTelegram','createWebsite'].forEach(id=>document.getElementById(id).value='');
@@ -2581,89 +2378,209 @@ async function createToken() {
   document.getElementById('imagePreview').style.display='none';
   document.getElementById('uploadPlaceholder').style.display='block';
   loadTokens();
-  setTimeout(()=>openToken(data.id),500);
+  setTimeout(()=>openToken(newToken.id),400);
 }
 
 /* ═══════════════════════════════════════════════════════════════
    FILTERS & SEARCH
 ═══════════════════════════════════════════════════════════════ */
 function setFilter(f, el) {
-  currentFilter = f;
+  currentFilter=f;
   document.querySelectorAll('.f-btn').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
   filterTokens();
 }
 function filterTokens() {
-  const q = document.getElementById('searchInput').value.toLowerCase();
-  let filtered = allTokens;
-  if (q) filtered = filtered.filter(t=>t.name.toLowerCase().includes(q)||t.symbol.toLowerCase().includes(q));
-  if (currentFilter==='new')        filtered = filtered.filter(t=>new Date()-new Date(t.created_at)<3600000);
-  else if (currentFilter==='trending') filtered = [...filtered].sort((a,b)=>(b.volume_24h||0)-(a.volume_24h||0));
-  else if (currentFilter==='graduating') filtered = filtered.filter(t=>(t.real_sol_reserves||0)/85*100>=70);
+  const q=document.getElementById('searchInput').value.toLowerCase();
+  let filtered=[...allTokens];
+  if (q) filtered=filtered.filter(t=>t.name.toLowerCase().includes(q)||t.symbol.toLowerCase().includes(q));
+  if      (currentFilter==='new')        filtered=filtered.filter(t=>new Date()-new Date(t.created_at)<3600000);
+  else if (currentFilter==='trending')   filtered=[...filtered].sort((a,b)=>(b.volume_24h||0)-(a.volume_24h||0));
+  else if (currentFilter==='graduating') filtered=filtered.filter(t=>(t.real_sol_reserves/85*100)>=70);
   renderTokens(filtered);
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   UTILITY FUNCTIONS
+   WALLET — MetaMask + Phantom
 ═══════════════════════════════════════════════════════════════ */
-function formatUSD(n) {
-  if (n>=1e6) return '$'+(n/1e6).toFixed(1)+'M';
-  if (n>=1e3) return '$'+(n/1e3).toFixed(1)+'K';
-  return '$'+parseFloat(n).toFixed(2);
+document.addEventListener('click', e=>{
+  if (!e.target.closest('#walletBtn')&&!e.target.closest('#walletMenu'))
+    document.getElementById('walletMenu').classList.remove('open');
+});
+
+function toggleWalletMenu() {
+  if (walletAddress) { showWalletInfoModal(); return; }
+  detectWallets();
+  document.getElementById('walletMenu').classList.toggle('open');
 }
-function formatSOL(n) { return parseFloat(n||0).toFixed(3); }
-function formatNum(n) {
-  if (n>=1e9) return (n/1e9).toFixed(2)+'B';
-  if (n>=1e6) return (n/1e6).toFixed(2)+'M';
-  if (n>=1e3) return (n/1e3).toFixed(2)+'K';
-  return n.toFixed(0);
+
+function detectWallets() {
+  const hasPhantom  = !!(window.solana?.isPhantom||window.phantom?.solana);
+  const hasMetaMask = !!(window.ethereum);
+  const pBtn=document.getElementById('phantomWalletBtn');
+  const mBtn=document.getElementById('mmWalletBtn');
+  if (pBtn) {
+    const s=pBtn.querySelector('.wallet-status');
+    if(s){s.textContent=hasPhantom?'● Detected':'○ Not installed';s.style.color=hasPhantom?'var(--green)':'var(--muted)';}
+  }
+  if (mBtn) {
+    const s=mBtn.querySelector('.wallet-status');
+    if(s){s.textContent=hasMetaMask?'● Detected':'○ Not installed';s.style.color=hasMetaMask?'var(--green)':'var(--muted)';}
+  }
 }
-function timeAgo(dateStr) {
-  if (!dateStr) return '';
-  const diff=(Date.now()-new Date(dateStr))/1000;
-  if (diff<60)    return Math.floor(diff)+'s ago';
-  if (diff<3600)  return Math.floor(diff/60)+'m ago';
-  if (diff<86400) return Math.floor(diff/3600)+'h ago';
-  return Math.floor(diff/86400)+'d ago';
+
+function setWalletUI(icon, addr, balance, unit) {
+  const short = unit==='ETH' ? addr.slice(0,6)+'…'+addr.slice(-4) : addr.slice(0,4)+'…'+addr.slice(-4);
+  document.getElementById('walletBtn').innerHTML =
+    `<span>${icon} ${short}</span><span style="font-size:9px;background:var(--green-dim);color:var(--green);padding:1px 5px;border-radius:3px;margin-left:4px">●</span>`;
+  const balText = balance ? parseFloat(balance).toFixed(4)+' '+unit : '– '+unit;
+  const pBal=document.getElementById('panelBalance');
+  const mBal=document.getElementById('mainBalance');
+  if(pBal) pBal.textContent=balText;
+  if(mBal) mBal.textContent=balText;
+  updateTradeButton();
 }
-function getEmoji(name) {
-  const e=['🚀','🐶','🐸','💎','🔥','🌙','⚡','💀','🦊','🐻','🦁','🐯','🍀','🎯','🌈'];
-  let h=0;
-  for (const c of (name||'')) h=(h*31+c.charCodeAt(0))&0xffffffff;
-  return e[Math.abs(h)%e.length];
+
+function disconnectWallet() {
+  if (walletType==='phantom'&&window.solana?.disconnect) window.solana.disconnect().catch(()=>{});
+  walletAddress=null; walletBalance=0; walletType=null;
+  document.getElementById('walletBtn').innerHTML='⬡ Connect Wallet';
+  const pBal=document.getElementById('panelBalance');
+  const mBal=document.getElementById('mainBalance');
+  if(pBal) pBal.textContent='Connect wallet';
+  if(mBal) mBal.textContent='– SOL';
+  document.getElementById('walletMenu').classList.remove('open');
+  closeWalletInfoModal();
+  updateTradeButton();
+  showNotif('Wallet disconnected','error');
 }
-function escapeHTML(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+async function connectPhantom() {
+  document.getElementById('walletMenu').classList.remove('open');
+  const provider = window.phantom?.solana ?? window.solana;
+  if (!provider?.isPhantom) {
+    showNotif('Phantom not installed — opening download page…','error');
+    window.open('https://phantom.app/download','_blank'); return;
+  }
+  try {
+    let resp;
+    if (provider.isConnected&&provider.publicKey) resp={publicKey:provider.publicKey};
+    else resp=await provider.connect();
+    walletAddress=resp.publicKey.toString();
+    walletType='phantom';
+    try {
+      const res=await fetch('https://api.mainnet-beta.solana.com',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'getBalance',params:[walletAddress]})});
+      const j=await res.json();
+      walletBalance=j.result?.value!=null?(j.result.value/1e9).toFixed(4):'–';
+    } catch { walletBalance='–'; }
+    setWalletUI('👻',walletAddress,walletBalance,'SOL');
+    showNotif('👻 Phantom connected: '+walletAddress.slice(0,4)+'…'+walletAddress.slice(-4),'success');
+    provider.on('disconnect',()=>disconnectWallet());
+    provider.on('accountChanged',pk=>{ if(!pk){disconnectWallet();return;} walletAddress=pk.toString(); setWalletUI('👻',walletAddress,'–','SOL'); });
+  } catch(err) {
+    if(err.code===4001) showNotif('Connection rejected','error');
+    else showNotif('Phantom error: '+(err.message||'Unknown'),'error');
+  }
 }
-function showNotif(msg, type='success') {
-  const el = document.getElementById('notif');
-  el.className = `notif show ${type}`;
-  el.innerHTML = (type==='success'?'✅ ':'❌ ')+msg;
-  clearTimeout(el._timer);
-  el._timer = setTimeout(()=>el.classList.remove('show'),4000);
+
+async function connectMetaMask() {
+  document.getElementById('walletMenu').classList.remove('open');
+  const provider=window.ethereum;
+  if (!provider) {
+    showNotif('MetaMask not installed — opening download page…','error');
+    window.open('https://metamask.io/download/','_blank'); return;
+  }
+  try {
+    const accounts=await provider.request({method:'eth_requestAccounts'});
+    if (!accounts?.length){showNotif('No accounts returned','error');return;}
+    walletAddress=accounts[0]; walletType='metamask';
+    try {
+      const balHex=await provider.request({method:'eth_getBalance',params:[walletAddress,'latest']});
+      walletBalance=(parseInt(balHex,16)/1e18).toFixed(4);
+    } catch { walletBalance='0'; }
+    let chainName='EVM';
+    try {
+      const cid=await provider.request({method:'eth_chainId'});
+      const chains={'0x1':'Ethereum','0x89':'Polygon','0x38':'BSC','0xa':'Optimism','0xa4b1':'Arbitrum','0x2105':'Base'};
+      chainName=chains[cid]||'Chain '+parseInt(cid,16);
+    } catch {}
+    setWalletUI('🦊',walletAddress,walletBalance,'ETH');
+    showNotif(`🦊 MetaMask (${chainName}): ${walletAddress.slice(0,6)}…${walletAddress.slice(-4)}`,'success');
+    provider.on('accountsChanged',accs=>{
+      if(!accs?.length){disconnectWallet();return;}
+      walletAddress=accs[0];
+      provider.request({method:'eth_getBalance',params:[walletAddress,'latest']})
+        .then(h=>{walletBalance=(parseInt(h,16)/1e18).toFixed(4);setWalletUI('🦊',walletAddress,walletBalance,'ETH');})
+        .catch(()=>setWalletUI('🦊',walletAddress,'–','ETH'));
+    });
+    provider.on('chainChanged',()=>{ provider.request({method:'eth_getBalance',params:[walletAddress,'latest']}).then(h=>{walletBalance=(parseInt(h,16)/1e18).toFixed(4);setWalletUI('🦊',walletAddress,walletBalance,'ETH');}).catch(()=>{}); });
+    provider.on('disconnect',()=>disconnectWallet());
+  } catch(err) {
+    if(err.code===4001) showNotif('Connection rejected','error');
+    else if(err.code===-32002) showNotif('MetaMask request pending — check extension','error');
+    else showNotif('MetaMask error: '+(err.message||'Unknown'),'error');
+  }
 }
-function showSection() { /* future navigation */ }
+
+function showWalletInfoModal() {
+  document.getElementById('walletInfoModal').classList.add('open');
+  const unit=walletType==='metamask'?'ETH':'SOL';
+  const icon=walletType==='metamask'?'🦊 MetaMask':'👻 Phantom';
+  document.getElementById('wiAddress').textContent    = walletAddress||'';
+  document.getElementById('wiBalance').textContent    = parseFloat(walletBalance||0).toFixed(4)+' '+unit;
+  document.getElementById('wiWalletType').textContent = icon;
+}
+function closeWalletInfoModal() { document.getElementById('walletInfoModal').classList.remove('open'); }
+function connectWallet() { toggleWalletMenu(); }
 
 /* ═══════════════════════════════════════════════════════════════
    MODAL CLOSE ON OVERLAY CLICK
 ═══════════════════════════════════════════════════════════════ */
-document.getElementById('tokenModal').addEventListener('click', function(e) {
-  if (e.target===this) closeModal();
-});
-document.getElementById('createOverlay').addEventListener('click', function(e) {
-  if (e.target===this) closeCreateModal();
-});
+document.getElementById('tokenModal').addEventListener('click',function(e){ if(e.target===this)closeModal(); });
+document.getElementById('createOverlay').addEventListener('click',function(e){ if(e.target===this)closeCreateModal(); });
+
+/* ═══════════════════════════════════════════════════════════════
+   UTILITY
+═══════════════════════════════════════════════════════════════ */
+function formatUSD(n) {
+  if(n>=1e6) return '$'+(n/1e6).toFixed(1)+'M';
+  if(n>=1e3) return '$'+(n/1e3).toFixed(1)+'K';
+  return '$'+parseFloat(n).toFixed(2);
+}
+function formatSOL(n) { return parseFloat(n||0).toFixed(3); }
+function formatNum(n) {
+  if(n>=1e9) return (n/1e9).toFixed(2)+'B';
+  if(n>=1e6) return (n/1e6).toFixed(2)+'M';
+  if(n>=1e3) return (n/1e3).toFixed(2)+'K';
+  return parseFloat(n).toFixed(0);
+}
+function timeAgo(dateStr) {
+  if(!dateStr) return '';
+  const diff=(Date.now()-new Date(dateStr))/1000;
+  if(diff<60)    return Math.floor(diff)+'s ago';
+  if(diff<3600)  return Math.floor(diff/60)+'m ago';
+  if(diff<86400) return Math.floor(diff/3600)+'h ago';
+  return Math.floor(diff/86400)+'d ago';
+}
+function escapeHTML(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function showNotif(msg, type='success') {
+  const el=document.getElementById('notif');
+  el.className='notif show '+type;
+  el.innerHTML=(type==='success'?'✅ ':'❌ ')+msg;
+  clearTimeout(el._timer);
+  el._timer=setTimeout(()=>el.classList.remove('show'),4000);
+}
+function showSection() {}
 
 /* ═══════════════════════════════════════════════════════════════
    INIT
 ═══════════════════════════════════════════════════════════════ */
-(async function init() {
+(function init() {
+  seedTrades();
   initMainChart();
-  buildEvents();
   initChat();
-  await loadTokens();
-  await loadLiveTrades();
-  setupRealtime();
+  loadTokens();
+  loadLiveTrades();
 })();
 </script>
 </body>
