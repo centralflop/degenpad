@@ -1,2717 +1,411 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DegenSad — Memecoin Launchpad on Solana</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DegenPad | Solana Launchpad</title>
+    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+    <style>
+        :root {
+            --bg-darker: #090a0f;
+            --bg-dark: #0f111a;
+            --bg-card: #151824;
+            --border: #222638;
+            --text-main: #f1f3f9;
+            --text-muted: #6b7280;
+            --primary: #8b5cf6;
+            --primary-hover: #7c3aed;
+            --green: #10b981;
+            --green-dim: rgba(16, 185, 129, 0.1);
+            --red: #ef4444;
+            --red-dim: rgba(239, 68, 68, 0.1);
+        }
 
-<script src="https://unpkg.com/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
 
-<style>
-/* ═══════════════════════════════════════════════
-   DESIGN TOKENS
-═══════════════════════════════════════════════ */
-:root {
-  --bg:        #0d0f1b;
-  --panel:     #151827;
-  --panel2:    #1a1d2e;
-  --border:    #23273c;
-  --border2:   #2d3250;
-  --green:     #32ff7e;
-  --green-dim: rgba(50,255,126,0.10);
-  --green-glow:rgba(50,255,126,0.25);
-  --red:       #ff4d6d;
-  --red-dim:   rgba(255,77,109,0.10);
-  --gold:      #ffcc00;
-  --gold-dim:  rgba(255,204,0,0.12);
-  --accent:    #7c5cfc;
-  --accent2:   #5edfff;
-  --text:      #e2e6f3;
-  --muted:     #5a6080;
-  --muted2:    #3d4260;
-  --radius:    12px;
-  --radius-sm: 8px;
-  --font-mono: 'Space Mono', monospace;
-  --font:      'Space Grotesk', sans-serif;
-  --shadow:    0 4px 24px rgba(0,0,0,0.4);
-  --glow-g:    0 0 20px rgba(50,255,126,0.15);
-  --glow-r:    0 0 20px rgba(255,77,109,0.15);
-  --glow-a:    0 0 20px rgba(124,92,252,0.2);
-}
+        body {
+            background-color: var(--bg-darker);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
 
-/* ═══ RESET & BASE ═══ */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { height: 100%; }
-body {
-  font-family: var(--font);
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
-}
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: var(--panel); }
-::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background-color: var(--bg-dark);
+            border-bottom: 1px solid var(--border);
+        }
 
-/* ═══════════════════════════════════════════════
-   NAV
-═══════════════════════════════════════════════ */
-.nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-  height: 56px;
-  background: var(--panel);
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  z-index: 200;
-  backdrop-filter: blur(12px);
-}
-.logo {
-  font-family: var(--font-mono);
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--green);
-  letter-spacing: -0.5px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.logo em {
-  font-style: normal;
-  color: var(--text);
-  opacity: 0.45;
-}
-.logo-dot {
-  width: 6px; height: 6px;
-  background: var(--green);
-  border-radius: 50%;
-  box-shadow: 0 0 8px var(--green);
-  animation: pulse 2s ease-in-out infinite;
-}
-@keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.5; transform:scale(0.85); } }
+        .logo-area {
+            font-size: 20px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            background: linear-gradient(45deg, #8b5cf6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
 
-.nav-links {
-  display: flex;
-  gap: 4px;
-  list-style: none;
-}
-.nav-links a {
-  color: var(--muted);
-  text-decoration: none;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 5px 12px;
-  border-radius: 6px;
-  transition: all 0.18s;
-}
-.nav-links a:hover, .nav-links a.active {
-  color: var(--text);
-  background: var(--panel2);
-}
-.nav-right { display: flex; gap: 8px; align-items: center; }
+        .wallet-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-/* Buttons */
-.btn {
-  padding: 7px 16px;
-  border-radius: var(--radius-sm);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition: all 0.18s;
-  font-family: var(--font);
-  white-space: nowrap;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.btn-outline {
-  background: transparent;
-  border-color: var(--border2);
-  color: var(--text);
-}
-.btn-outline:hover { border-color: var(--green); color: var(--green); }
-.btn-primary {
-  background: var(--green);
-  color: #000;
-  font-weight: 700;
-  border-color: var(--green);
-  box-shadow: 0 0 14px rgba(50,255,126,0.3);
-}
-.btn-primary:hover { background: #28e870; box-shadow: 0 0 20px rgba(50,255,126,0.45); transform: translateY(-1px); }
-.btn-ghost {
-  background: var(--panel2);
-  border-color: var(--border);
-  color: var(--muted);
-}
-.btn-ghost:hover { color: var(--text); border-color: var(--border2); }
+        button {
+            cursor: pointer;
+            border: none;
+            border-radius: 6px;
+            font-weight: 6px;
+            transition: all 0.2s ease;
+        }
 
-#walletBtn { font-family: var(--font-mono); font-size: 11px; display:inline-flex;align-items:center;gap:4px; }
-#walletInfoModal { display:none; }
-#walletInfoModal.open { display:flex; align-items:center; justify-content:center; }
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            padding: 10px 20px;
+            font-weight: 600;
+        }
 
-/* Wallet menu */
-.wallet-dropdown {
-  position: relative;
-}
-.wallet-menu {
-  display: none;
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  background: var(--panel2);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius);
-  min-width: 210px;
-  z-index: 999;
-  overflow: hidden;
-  box-shadow: var(--shadow);
-  animation: dropIn 0.15s ease;
-}
-.wallet-menu.open { display: block; }
-@keyframes dropIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
-.wallet-menu-header {
-  padding: 8px 14px;
-  font-size: 10px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  border-bottom: 1px solid var(--border);
-}
-.wallet-option {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 11px 14px;
-  background: none;
-  border: none;
-  border-top: 1px solid var(--border);
-  color: var(--text);
-  cursor: pointer;
-  font-family: var(--font);
-  font-size: 14px;
-  font-weight: 500;
-  transition: background 0.15s;
-  text-align: left;
-}
-.wallet-option:first-of-type { border-top: none; }
-.wallet-option:hover { background: var(--border); }
-.wallet-option img { width: 22px; height: 22px; border-radius: 6px; }
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
 
-/* ═══════════════════════════════════════════════
-   TICKER
-═══════════════════════════════════════════════ */
-.ticker-bar {
-  background: var(--panel);
-  border-bottom: 1px solid var(--border);
-  padding: 6px 0;
-  overflow: hidden;
-  white-space: nowrap;
-}
-.ticker-inner {
-  display: inline-flex;
-  gap: 48px;
-  animation: scroll-x 35s linear infinite;
-}
-@keyframes scroll-x { 0% { transform:translateX(0); } 100% { transform:translateX(-50%); } }
-.ticker-item {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--muted);
-}
-.ticker-item .sym { color: var(--text); font-weight: 700; }
-.ticker-item .up  { color: var(--green); }
-.ticker-item .dn  { color: var(--red);   }
+        /* Layout Principal */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            height: calc(100vh - 72px);
+        }
 
-/* ═══════════════════════════════════════════════
-   STATS BAR
-═══════════════════════════════════════════════ */
-.stats-bar {
-  display: flex;
-  justify-content: center;
-  background: var(--panel);
-  border-bottom: 1px solid var(--border);
-}
-.stat-item {
-  flex: 1;
-  max-width: 180px;
-  text-align: center;
-  padding: 14px 12px;
-  border-right: 1px solid var(--border);
-}
-.stat-item:last-child { border-right: none; }
-.stat-val {
-  font-family: var(--font-mono);
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--green);
-  text-shadow: 0 0 12px rgba(50,255,126,0.3);
-}
-.stat-label {
-  font-size: 10px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-top: 2px;
-}
+        .panel {
+            background-color: var(--bg-dark);
+            border-right: 1px solid var(--border);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
 
-/* ═══════════════════════════════════════════════
-   3-COLUMN LAYOUT
-═══════════════════════════════════════════════ */
-.arena {
-  display: grid;
-  grid-template-columns: 280px 1fr 280px;
-  gap: 0;
-  height: calc(100vh - 56px - 33px - 49px); /* nav + ticker + stats */
-  overflow: hidden;
-}
+        .panel-right {
+            border-right: none;
+            border-left: 1px solid var(--border);
+        }
 
-/* Panel base */
-.panel {
-  background: var(--panel);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.panel:last-child { border-right: none; border-left: 1px solid var(--border); }
+        .center-content {
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
 
-.panel-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-.panel-title {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 1.2px;
-  color: var(--muted);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 700;
-}
-.panel-title .dot {
-  width: 5px; height: 5px;
-  border-radius: 50%;
-  background: var(--green);
-  box-shadow: 0 0 6px var(--green);
-}
-.panel-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 10px 12px;
-}
+        /* Modales */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
 
-/* ═══════════════════════════════════════════════
-   LEFT PANEL — COMMUNITY CHAT
-═══════════════════════════════════════════════ */
-.chat-messages {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 12px;
-  flex: 1;
-  overflow-y: auto;
-}
-.chat-msg {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  animation: msgIn 0.25s ease;
-}
-@keyframes msgIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
-.chat-msg-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.chat-avatar {
-  width: 22px; height: 22px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  flex-shrink: 0;
-}
-.chat-addr {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--green);
-  font-weight: 700;
-}
-.chat-addr.whale { color: var(--gold); }
-.chat-addr.degen { color: var(--accent2); }
-.chat-time {
-  font-size: 9px;
-  color: var(--muted2);
-  margin-left: auto;
-}
-.chat-text {
-  font-size: 12px;
-  color: #c0c6e0;
-  line-height: 1.45;
-  padding-left: 28px;
-}
-.chat-badge {
-  font-size: 9px;
-  padding: 1px 5px;
-  border-radius: 3px;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-.badge-whale { background: var(--gold-dim); color: var(--gold); }
-.badge-degen { background: rgba(94,223,255,0.12); color: var(--accent2); }
-.badge-mod   { background: var(--green-dim); color: var(--green); }
+        .modal-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 25px;
+            border-radius: 12px;
+            width: 400px;
+            max-width: 90%;
+            position: relative;
+        }
 
-.chat-input-wrap {
-  display: flex;
-  gap: 6px;
-  padding: 10px 12px;
-  border-top: 1px solid var(--border);
-  flex-shrink: 0;
-}
-.chat-input {
-  flex: 1;
-  background: var(--panel2);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-sm);
-  padding: 7px 10px;
-  color: var(--text);
-  font-size: 12px;
-  font-family: var(--font);
-  transition: border-color 0.18s;
-}
-.chat-input:focus { outline: none; border-color: var(--accent); }
-.chat-input::placeholder { color: var(--muted2); }
-.chat-send {
-  background: var(--green-dim);
-  border: 1px solid var(--green);
-  border-radius: var(--radius-sm);
-  color: var(--green);
-  padding: 7px 10px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.18s;
-}
-.chat-send:hover { background: var(--green); color: #000; }
+        .modal-header {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
 
-/* Recent events */
-.event-list { display: flex; flex-direction: column; gap: 6px; }
-.event-item {
-  background: var(--panel2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 8px 10px;
-  font-size: 11px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: border-color 0.18s;
-}
-.event-item:hover { border-color: var(--border2); }
-.event-icon { font-size: 14px; flex-shrink: 0; }
-.event-text { color: #a0a8c0; line-height: 1.4; }
-.event-text strong { color: var(--text); }
-.event-time { font-family: var(--font-mono); font-size: 9px; color: var(--muted2); margin-left: auto; white-space: nowrap; }
+        .close-btn {
+            color: var(--text-muted);
+            cursor: pointer;
+        }
 
-/* ═══════════════════════════════════════════════
-   CENTER PANEL — TRADING AREA
-═══════════════════════════════════════════════ */
-.center-panel {
-  display: flex;
-  flex-direction: column;
-  background: var(--bg);
-  overflow: hidden;
-}
+        .input-group {
+            margin-bottom: 15px;
+        }
 
-/* Token selector bar */
-.token-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 16px;
-  background: var(--panel);
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-.token-bar-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 1;
-}
-.token-bar-avatar {
-  width: 34px; height: 34px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), var(--green));
-  display: flex; align-items: center; justify-content: center;
-  font-size: 16px;
-  flex-shrink: 0;
-  overflow: hidden;
-}
-.token-bar-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.token-bar-name { font-size: 15px; font-weight: 700; }
-.token-bar-sym { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
-.token-bar-price {
-  font-family: var(--font-mono);
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--green);
-  text-shadow: var(--glow-g);
-}
-.token-bar-change {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-weight: 700;
-}
-.token-bar-change.up { background: var(--green-dim); color: var(--green); }
-.token-bar-change.dn { background: var(--red-dim);   color: var(--red);   }
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
 
-/* Multiplier display */
-.multiplier-display {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 10px 16px;
-  background: var(--panel);
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-.mult-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
-.mult-value {
-  font-family: var(--font-mono);
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--gold);
-  text-shadow: 0 0 20px rgba(255,204,0,0.4);
-  transition: color 0.3s;
-  min-width: 90px;
-  text-align: center;
-}
-.mult-value.up { color: var(--green); text-shadow: var(--glow-g); }
-.mult-value.dn { color: var(--red);   text-shadow: var(--glow-r); }
-.mult-bar {
-  flex: 1;
-  height: 4px;
-  background: var(--panel2);
-  border-radius: 2px;
-  overflow: hidden;
-  max-width: 200px;
-}
-.mult-bar-fill {
-  height: 100%;
-  border-radius: 2px;
-  transition: width 0.4s ease, background 0.3s;
-  background: linear-gradient(90deg, var(--green), var(--gold));
-}
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            background: var(--bg-darker);
+            border: 1px solid var(--border);
+            color: white;
+            border-radius: 6px;
+        }
 
-/* Chart area */
-.chart-wrap {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-  min-height: 0;
-}
-#mainChart { width: 100%; height: 100%; }
-.chart-overlay {
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  display: flex;
-  gap: 4px;
-  padding: 8px;
-  z-index: 10;
-  pointer-events: none;
-}
-.chart-overlay button { pointer-events: all; }
-.chart-tab {
-  padding: 3px 10px;
-  border-radius: 5px;
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-  background: rgba(21,24,39,0.85);
-  backdrop-filter: blur(6px);
-  color: var(--muted);
-  border: 1px solid var(--border);
-  transition: all 0.18s;
-  font-family: var(--font-mono);
-}
-.chart-tab.active { background: var(--green-dim); color: var(--green); border-color: var(--green); }
+        /* Styles de Statut / Trading Box (Mock) */
+        .trading-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+        }
 
-/* Trade bottom bar */
-.trade-bar {
-  display: grid;
-  grid-template-columns: 1fr 160px 1fr;
-  gap: 10px;
-  padding: 12px 16px;
-  background: var(--panel);
-  border-top: 1px solid var(--border);
-  flex-shrink: 0;
-  align-items: center;
-}
-.trade-amount-wrap {
-  position: relative;
-}
-.trade-input-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
-.trade-amount-inner {
-  display: flex;
-  align-items: center;
-  background: var(--panel2);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-}
-.trade-amount-inner.focus { border-color: var(--green); }
-.trade-inp {
-  flex: 1;
-  background: none;
-  border: none;
-  padding: 9px 10px;
-  color: var(--text);
-  font-size: 16px;
-  font-family: var(--font-mono);
-  font-weight: 700;
-}
-.trade-inp:focus { outline: none; }
-.trade-inp-unit {
-  padding: 0 10px;
-  font-size: 11px;
-  color: var(--muted);
-  font-weight: 600;
-  border-left: 1px solid var(--border);
-}
-.quick-btns { display: flex; gap: 4px; margin-top: 5px; }
-.q-btn {
-  flex: 1;
-  padding: 4px 0;
-  background: var(--panel2);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s;
-  font-family: var(--font-mono);
-  text-align: center;
-}
-.q-btn:hover { border-color: var(--green); color: var(--green); background: var(--green-dim); }
-
-.trade-actions { display: flex; flex-direction: column; gap: 6px; }
-.trade-btn {
-  width: 100%;
-  padding: 12px;
-  border-radius: var(--radius-sm);
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  border: none;
-  font-family: var(--font);
-  transition: all 0.18s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-}
-.btn-buy {
-  background: var(--green);
-  color: #000;
-  box-shadow: 0 0 18px rgba(50,255,126,0.35);
-}
-.btn-buy:hover { background: #28e870; box-shadow: 0 0 28px rgba(50,255,126,0.55); transform: translateY(-1px); }
-.btn-sell {
-  background: var(--red);
-  color: #fff;
-  box-shadow: 0 0 18px rgba(255,77,109,0.3);
-}
-.btn-sell:hover { background: #ff2d50; box-shadow: 0 0 28px rgba(255,77,109,0.5); transform: translateY(-1px); }
-.btn-buy:disabled, .btn-sell:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
-
-.trade-estimate-box {
-  background: var(--panel2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 8px 10px;
-  font-size: 11px;
-}
-.est-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
-.est-row:last-child { margin-bottom: 0; }
-.est-lbl { color: var(--muted); }
-.est-val { font-family: var(--font-mono); color: var(--text); }
-
-/* Token grid section (below arena) */
-.token-section {
-  border-top: 1px solid var(--border);
-  background: var(--bg);
-}
-.section-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px 12px;
-}
-.section-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.filter-strip { display: flex; gap: 6px; flex-wrap: wrap; }
-.f-btn {
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  background: var(--panel);
-  color: var(--muted);
-  border: 1px solid var(--border);
-  transition: all 0.18s;
-  font-family: var(--font);
-}
-.f-btn:hover, .f-btn.active { background: var(--green-dim); color: var(--green); border-color: var(--green); }
-.search-wrap { position: relative; }
-.search-wrap::before { content: '⌕'; position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: var(--muted2); font-size: 15px; pointer-events: none; }
-.search-inp {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 6px 12px 6px 30px;
-  color: var(--text);
-  font-size: 12px;
-  width: 180px;
-  font-family: var(--font);
-}
-.search-inp:focus { outline: none; border-color: var(--accent); }
-.search-inp::placeholder { color: var(--muted2); }
-
-.token-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 12px;
-  padding: 0 20px 20px;
-}
-.token-card {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-  position: relative;
-  overflow: hidden;
-}
-.token-card::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--green), var(--accent));
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-.token-card:hover { border-color: var(--border2); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.35); }
-.token-card:hover::before { opacity: 1; }
-.card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-.token-avatar {
-  width: 40px; height: 40px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), var(--green));
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px;
-  flex-shrink: 0;
-  overflow: hidden;
-}
-.token-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.token-name { font-weight: 700; font-size: 14px; }
-.token-symbol { font-family: var(--font-mono); font-size: 10px; color: var(--muted); margin-top: 2px; }
-.card-badge {
-  margin-left: auto;
-  font-size: 9px;
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-.badge-new  { background: rgba(124,92,252,0.18); color: var(--accent); }
-.badge-hot  { background: var(--green-dim); color: var(--green); }
-.badge-grad { background: rgba(255,204,0,0.15); color: var(--gold); }
-.card-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
-.c-stat .c-label { color: var(--muted2); font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; }
-.c-stat .c-val { font-family: var(--font-mono); font-size: 12px; font-weight: 700; }
-.bond-bar { height: 3px; background: var(--panel2); border-radius: 2px; overflow: hidden; margin-bottom: 4px; }
-.bond-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--accent2)); border-radius: 2px; transition: width 0.5s; }
-.bond-label { display: flex; justify-content: space-between; font-size: 9px; color: var(--muted2); }
-
-/* ═══════════════════════════════════════════════
-   RIGHT PANEL — LEADERBOARD
-═══════════════════════════════════════════════ */
-.lb-list { display: flex; flex-direction: column; gap: 6px; }
-.lb-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 10px;
-  background: var(--panel2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  transition: border-color 0.18s;
-  animation: lbIn 0.3s ease both;
-}
-@keyframes lbIn { from { opacity:0; transform:translateX(10px); } to { opacity:1; transform:translateX(0); } }
-.lb-item:hover { border-color: var(--border2); }
-.lb-rank {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  width: 18px;
-  text-align: center;
-  color: var(--muted);
-  flex-shrink: 0;
-}
-.lb-rank.gold   { color: var(--gold);    text-shadow: 0 0 8px rgba(255,204,0,0.5); }
-.lb-rank.silver { color: #c0c0c0; }
-.lb-rank.bronze { color: #cd7f32; }
-.lb-avatar {
-  width: 28px; height: 28px;
-  border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 13px;
-  flex-shrink: 0;
-}
-.lb-info { flex: 1; min-width: 0; }
-.lb-addr { font-family: var(--font-mono); font-size: 10px; color: var(--text); font-weight: 700; }
-.lb-tag  { font-size: 9px; color: var(--muted); }
-.lb-pnl  { font-family: var(--font-mono); font-size: 12px; font-weight: 700; text-align: right; }
-.lb-pnl.up { color: var(--green); }
-.lb-pnl.dn { color: var(--red);   }
-
-/* Live trades list */
-.live-trade-item {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 7px 0;
-  border-bottom: 1px solid var(--border);
-  font-size: 11px;
-  animation: tradeIn 0.25s ease;
-}
-@keyframes tradeIn { from { opacity:0; background: rgba(50,255,126,0.05); } to { opacity:1; background: transparent; } }
-.live-trade-item:last-child { border-bottom: none; }
-.lt-type {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 700;
-  padding: 2px 5px;
-  border-radius: 3px;
-  flex-shrink: 0;
-}
-.lt-buy  { background: var(--green-dim); color: var(--green); }
-.lt-sell { background: var(--red-dim);   color: var(--red);   }
-.lt-sym   { font-weight: 600; flex: 1; }
-.lt-addr  { font-family: var(--font-mono); font-size: 9px; color: var(--muted2); }
-.lt-amt   { font-family: var(--font-mono); font-weight: 700; margin-left: auto; }
-.lt-amt.buy  { color: var(--green); }
-.lt-amt.sell { color: var(--red);   }
-
-/* ═══════════════════════════════════════════════
-   TOKEN MODAL
-═══════════════════════════════════════════════ */
-.modal-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.82);
-  backdrop-filter: blur(6px);
-  z-index: 500;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-}
-.modal-overlay.open { display: flex; }
-.modal {
-  background: var(--panel);
-  border: 1px solid var(--border2);
-  border-radius: 16px;
-  width: 100%;
-  max-width: 960px;
-  max-height: 90vh;
-  overflow-y: auto;
-  display: grid;
-  grid-template-columns: 1fr 300px;
-  box-shadow: 0 24px 64px rgba(0,0,0,0.6);
-  animation: modalIn 0.22s ease;
-}
-@keyframes modalIn { from { opacity:0; transform:scale(0.96); } to { opacity:1; transform:scale(1); } }
-.modal-left  { padding: 22px; border-right: 1px solid var(--border); }
-.modal-right { padding: 22px; }
-.modal-header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
-.modal-av {
-  width: 48px; height: 48px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), var(--green));
-  display: flex; align-items: center; justify-content: center;
-  font-size: 22px;
-  overflow: hidden; flex-shrink: 0;
-}
-.modal-av img { width: 100%; height: 100%; object-fit: cover; }
-.modal-name { font-size: 20px; font-weight: 700; }
-.modal-sym  { font-family: var(--font-mono); font-size: 12px; color: var(--muted); margin-top: 2px; }
-.modal-close {
-  margin-left: auto;
-  background: none;
-  border: 1px solid var(--border);
-  color: var(--muted);
-  width: 30px; height: 30px;
-  border-radius: 7px;
-  cursor: pointer;
-  font-size: 15px;
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.18s;
-}
-.modal-close:hover { border-color: var(--red); color: var(--red); }
-
-.chart-tabs { display: flex; gap: 4px; margin-bottom: 10px; }
-.m-chart-tab {
-  padding: 4px 10px;
-  border-radius: 5px;
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-  background: var(--panel2);
-  color: var(--muted);
-  border: 1px solid transparent;
-  transition: all 0.18s;
-  font-family: var(--font-mono);
-}
-.m-chart-tab.active { background: var(--green-dim); color: var(--green); border-color: var(--green); }
-#tradeChart { width: 100%; height: 260px; border-radius: var(--radius-sm); overflow: hidden; background: var(--panel2); margin-bottom: 14px; }
-
-.details-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 16px; }
-.detail-box { background: var(--panel2); border-radius: var(--radius-sm); padding: 10px; }
-.detail-box .d-label { font-size: 9px; color: var(--muted2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-.detail-box .d-val   { font-family: var(--font-mono); font-size: 13px; font-weight: 700; }
-
-.bond-section { margin-bottom: 16px; }
-.bond-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 7px; }
-.bond-bar-lg { height: 7px; background: var(--panel2); border-radius: 4px; overflow: hidden; margin-bottom: 5px; }
-.bond-fill-lg { height: 100%; background: linear-gradient(90deg, var(--green), var(--accent2)); border-radius: 4px; transition: width 0.8s ease; }
-.bond-info { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
-.bond-pct { color: var(--green); font-weight: 700; font-family: var(--font-mono); }
-
-.modal-trades-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin: 14px 0 8px; }
-.modal-trade-row {
-  display: flex; align-items: center; gap: 7px;
-  padding: 6px 0; border-bottom: 1px solid #1a1d2e;
-  font-size: 11px;
-}
-.modal-trade-row:last-child { border-bottom: none; }
-
-.comments-section { border-top: 1px solid var(--border); padding-top: 14px; margin-top: 6px; }
-.comments-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 10px; }
-.comment-form { display: flex; gap: 7px; margin-bottom: 14px; }
-.comment-input {
-  flex: 1;
-  background: var(--panel2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 7px 10px;
-  color: var(--text);
-  font-size: 12px;
-  font-family: var(--font);
-}
-.comment-input:focus { outline: none; border-color: var(--accent); }
-.comment { padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
-.comment:last-child { border-bottom: none; }
-.comment-addr { font-family: var(--font-mono); font-size: 9px; color: var(--green); margin-bottom: 3px; }
-.comment-text { color: #b0b8d0; }
-.comment-time { font-size: 9px; color: var(--muted2); margin-top: 3px; }
-
-/* Right modal panel */
-.trade-tabs { display: flex; gap: 0; margin-bottom: 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
-.trade-tab {
-  flex: 1; padding: 9px;
-  text-align: center;
-  cursor: pointer;
-  font-size: 13px; font-weight: 700;
-  transition: all 0.18s;
-  border: none; background: transparent;
-  color: var(--muted); font-family: var(--font);
-}
-.trade-tab.buy.active  { background: var(--green); color: #000; }
-.trade-tab.sell.active { background: var(--red);   color: #fff; }
-.trade-tab:hover:not(.active) { background: var(--panel2); }
-
-.wallet-bal { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 7px; }
-.wallet-bal span:last-child { color: var(--green); font-family: var(--font-mono); }
-.amount-wrap { position: relative; margin-bottom: 10px; }
-.amount-inp {
-  width: 100%;
-  background: var(--panel2);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-sm);
-  padding: 12px 50px 12px 14px;
-  color: var(--text);
-  font-size: 16px;
-  font-family: var(--font-mono);
-  font-weight: 700;
-  transition: border-color 0.18s;
-}
-.amount-inp:focus { outline: none; border-color: var(--green); }
-.amount-unit { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 11px; color: var(--muted); }
-.quick-amounts { display: grid; grid-template-columns: repeat(4,1fr); gap: 5px; margin-bottom: 14px; }
-.qa-btn {
-  padding: 7px 4px;
-  background: var(--panel2);
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.18s;
-  font-family: var(--font-mono);
-  text-align: center;
-}
-.qa-btn:hover { border-color: var(--green); color: var(--green); background: var(--green-dim); }
-.trade-estimate { background: var(--panel2); border-radius: var(--radius-sm); padding: 10px; margin-bottom: 12px; font-size: 11px; }
-.trade-estimate .est-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
-.trade-estimate .est-row:last-child { margin-bottom: 0; }
-.trade-estimate .lbl { color: var(--muted); }
-.trade-estimate .val { font-family: var(--font-mono); }
-.trade-submit {
-  width: 100%;
-  padding: 13px;
-  border-radius: var(--radius-sm);
-  font-size: 15px; font-weight: 700;
-  cursor: pointer; border: none;
-  font-family: var(--font);
-  transition: all 0.18s;
-}
-.trade-submit.buy  { background: var(--green); color: #000; box-shadow: 0 0 16px rgba(50,255,126,0.3); }
-.trade-submit.buy:hover  { background: #28e870; }
-.trade-submit.sell { background: var(--red);   color: #fff; box-shadow: 0 0 16px rgba(255,77,109,0.25); }
-.trade-submit.sell:hover { background: #ff2d50; }
-.trade-submit:disabled { opacity: 0.45; cursor: not-allowed; }
-.trade-hint { margin-top: 12px; font-size: 10px; color: var(--muted2); text-align: center; line-height: 1.6; }
-
-/* ═══════════════════════════════════════════════
-   CREATE TOKEN MODAL
-═══════════════════════════════════════════════ */
-.create-overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.88);
-  backdrop-filter: blur(6px);
-  z-index: 600;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-}
-.create-overlay.open { display: flex; }
-.create-modal {
-  background: var(--panel);
-  border: 1px solid var(--border2);
-  border-radius: 16px;
-  width: 100%;
-  max-width: 500px;
-  padding: 26px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 24px 64px rgba(0,0,0,0.6);
-  animation: modalIn 0.22s ease;
-}
-.create-modal h2 { font-size: 18px; font-weight: 700; margin-bottom: 5px; }
-.create-subtitle { color: var(--muted); font-size: 12px; margin-bottom: 22px; }
-.form-group { margin-bottom: 14px; }
-.form-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; display: block; }
-.form-input, .form-textarea {
-  width: 100%;
-  background: var(--panel2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 9px 12px;
-  color: var(--text);
-  font-size: 13px;
-  font-family: var(--font);
-  transition: border-color 0.18s;
-}
-.form-input:focus, .form-textarea:focus { outline: none; border-color: var(--accent); }
-.form-textarea { resize: vertical; min-height: 75px; }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.image-upload {
-  border: 2px dashed var(--border);
-  border-radius: var(--radius-sm);
-  padding: 22px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.18s;
-}
-.image-upload:hover { border-color: var(--accent); background: rgba(124,92,252,0.04); }
-.image-upload p { color: var(--muted); font-size: 12px; margin-top: 7px; }
-.image-upload input { display: none; }
-.upload-preview { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; margin: 0 auto; display: block; }
-.create-actions { display: flex; gap: 8px; margin-top: 18px; }
-.create-actions .btn { flex: 1; padding: 11px; font-size: 14px; }
-
-/* ═══════════════════════════════════════════════
-   NOTIFICATION
-═══════════════════════════════════════════════ */
-.notif {
-  position: fixed;
-  top: 66px; right: 16px;
-  z-index: 999;
-  background: var(--panel2);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius);
-  padding: 12px 16px;
-  font-size: 12px;
-  max-width: 300px;
-  display: none;
-}
-.notif.show { display: flex; align-items: center; gap: 8px; animation: slideIn 0.25s ease; }
-.notif.success { border-color: var(--green); }
-.notif.error   { border-color: var(--red);   }
-@keyframes slideIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
-
-/* ═══════════════════════════════════════════════
-   MISC
-═══════════════════════════════════════════════ */
-.empty-state { grid-column: 1/-1; text-align: center; padding: 50px 20px; color: var(--muted2); }
-.empty-state .es-icon { font-size: 36px; margin-bottom: 8px; }
-.empty-state p { font-size: 13px; }
-
-footer {
-  border-top: 1px solid var(--border);
-  padding: 16px 20px;
-  text-align: center;
-  color: var(--muted2);
-  font-size: 11px;
-}
-footer a { color: var(--muted); text-decoration: none; transition: color 0.18s; }
-footer a:hover { color: var(--green); }
-
-/* ═══════════════════════════════════════════════
-   RESPONSIVE
-═══════════════════════════════════════════════ */
-@media (max-width: 1100px) {
-  .arena { grid-template-columns: 240px 1fr 240px; }
-}
-@media (max-width: 900px) {
-  .arena {
-    grid-template-columns: 1fr;
-    height: auto;
-    overflow: visible;
-  }
-  .panel { height: auto; max-height: 300px; }
-  .panel.right-panel { order: -1; max-height: 280px; }
-  .modal { grid-template-columns: 1fr; }
-  .modal-left { border-right: none; border-bottom: 1px solid var(--border); }
-  .stats-bar { flex-wrap: wrap; }
-  .stat-item { min-width: 110px; }
-  .trade-bar { grid-template-columns: 1fr; gap: 8px; }
-  .nav-links { display: none; }
-}
-@media (max-width: 600px) {
-  .token-grid { grid-template-columns: 1fr; }
-}
-
-/* Glassmorphism helper */
-.glass {
-  background: rgba(21,24,39,0.7);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(35,39,60,0.8);
-}
-</style>
+        .token-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════
-     NAVIGATION
-═══════════════════════════════════════════════ -->
-<nav class="nav">
-  <div class="logo">
-    <div class="logo-dot"></div>
-    degen<em>sad</em>
-  </div>
-  <ul class="nav-links">
-    <li><a href="#" class="active" onclick="showSection('home')">Explore</a></li>
-    <li><a href="#" onclick="showSection('leaderboard')">Leaderboard</a></li>
-    <li><a href="#" onclick="showSection('portfolio')">Portfolio</a></li>
-  </ul>
-  <div class="nav-right">
-    <button class="btn btn-primary" onclick="openCreateModal()">🚀 Launch Token</button>
-    <div class="wallet-dropdown">
-      <button class="btn btn-outline" id="walletBtn" onclick="toggleWalletMenu()">⬡ Connect Wallet</button>
-      <div class="wallet-menu" id="walletMenu">
-        <div class="wallet-menu-header">Choose wallet</div>
-        <button class="wallet-option" id="phantomWalletBtn" onclick="connectPhantom()">
-          <img src="https://phantom.app/img/phantom-logo.png" onerror="this.style.display='none'">
-          <span style="flex:1;text-align:left">
-            <span style="display:block;font-weight:600">Phantom</span>
-            <span class="wallet-status" style="font-size:10px;color:var(--muted)">○ Checking…</span>
-          </span>
-          <span style="font-size:10px;color:var(--muted2)">Solana</span>
-        </button>
-        <button class="wallet-option" id="mmWalletBtn" onclick="connectMetaMask()">
-          <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg">
-          <span style="flex:1;text-align:left">
-            <span style="display:block;font-weight:600">MetaMask</span>
-            <span class="wallet-status" style="font-size:10px;color:var(--muted)">○ Checking…</span>
-          </span>
-          <span style="font-size:10px;color:var(--muted2)">EVM</span>
-        </button>
-        <div style="padding:9px 14px;border-top:1px solid var(--border);font-size:10px;color:var(--muted2);line-height:1.5">
-          No wallet? Install <a href="https://phantom.app/download" target="_blank" style="color:var(--accent2);text-decoration:none">Phantom</a> or <a href="https://metamask.io/download" target="_blank" style="color:var(--accent2);text-decoration:none">MetaMask</a>
+    <header>
+        <div class="logo-area">DEGENPAD SOLANA</div>
+        <div class="wallet-container">
+            <button id="walletBtn" class="btn-primary" onclick="toggleWalletAction()">👻 Connect Phantom</button>
         </div>
-      </div>
-    </div>
-  </div>
-</nav>
+    </header>
 
-<!-- ═══════════════════════════════════════════════
-     TICKER BAR
-═══════════════════════════════════════════════ -->
-<div class="ticker-bar" id="tickerBar" style="display:none">
-  <div class="ticker-inner" id="tickerInner"></div>
-</div>
-
-<!-- ═══════════════════════════════════════════════
-     STATS BAR
-═══════════════════════════════════════════════ -->
-<div class="stats-bar">
-  <div class="stat-item">
-    <div class="stat-val" id="statTokens">–</div>
-    <div class="stat-label">Tokens Launched</div>
-  </div>
-  <div class="stat-item">
-    <div class="stat-val" id="statTrades">–</div>
-    <div class="stat-label">Total Trades</div>
-  </div>
-  <div class="stat-item">
-    <div class="stat-val" id="statVolume">–</div>
-    <div class="stat-label">Volume (SOL)</div>
-  </div>
-  <div class="stat-item">
-    <div class="stat-val" id="statGraduated">–</div>
-    <div class="stat-label">Graduated</div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════
-     3-COLUMN ARENA
-═══════════════════════════════════════════════ -->
-<div class="arena">
-
-  <!-- ── LEFT: COMMUNITY CHAT ── -->
-  <div class="panel">
-    <div class="panel-head">
-      <div class="panel-title"><span class="dot"></span>Community Chat</div>
-      <span style="font-size:10px;color:var(--muted);font-family:var(--font-mono)" id="onlineCount">● 0 online</span>
-    </div>
-    <!-- Events sub-section -->
-    <div style="padding:10px 12px 6px; border-bottom:1px solid var(--border); flex-shrink:0;">
-      <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted2);margin-bottom:7px;">Recent Events</div>
-      <div class="event-list" id="eventList">
-        <div style="color:var(--muted2);font-size:11px;text-align:center;padding:8px">Loading events…</div>
-      </div>
-    </div>
-    <!-- Messages -->
-    <div class="chat-messages" id="chatMessages">
-      <div style="color:var(--muted2);font-size:11px;text-align:center;padding:16px">Say something, degen 👇</div>
-    </div>
-    <!-- Input -->
-    <div class="chat-input-wrap">
-      <input class="chat-input" id="chatInput" placeholder="Type a message…" maxlength="140"
-             onkeydown="if(event.key==='Enter') sendChat()">
-      <button class="chat-send" onclick="sendChat()">➤</button>
-    </div>
-  </div>
-
-  <!-- ── CENTER: TRADING CHART ── -->
-  <div class="center-panel">
-
-    <!-- Token bar -->
-    <div class="token-bar" id="tokenBar">
-      <div class="token-bar-info">
-        <div class="token-bar-avatar" id="tbAvatar">📊</div>
-        <div>
-          <div class="token-bar-name" id="tbName">Select a Token</div>
-          <div class="token-bar-sym"  id="tbSym">Click a card below to trade</div>
+    <div class="main-layout">
+        <div class="panel">
+            <h3>Tableau de bord</h3>
+            <div style="background: var(--bg-card); padding: 15px; border-radius: 6px; border: 1px solid var(--border);">
+                <p style="font-size: 12px; color: var(--text-muted);">Solde Interne Plateforme</p>
+                <h2 id="internalBalance">0.0000 SOL</h2>
+            </div>
+            <button class="btn-primary" onclick="openDepositModal()" style="background:#10b981;">📥 Déposer des SOL</button>
         </div>
-      </div>
-      <div class="token-bar-price" id="tbPrice">$0</div>
-      <div class="token-bar-change up" id="tbChange">+0.00%</div>
-    </div>
 
-    <!-- Multiplier -->
-    <div class="multiplier-display">
-      <span class="mult-label">Multiplier</span>
-      <div class="mult-bar"><div class="mult-bar-fill" id="multFill" style="width:20%"></div></div>
-      <div class="mult-value" id="multValue">1.00x</div>
-      <div class="mult-bar"><div class="mult-bar-fill" id="multFill2" style="width:20%"></div></div>
-      <span class="mult-label">Live</span>
-    </div>
+        <div class="center-content">
+            <div class="trading-box">
+                <h2>Terminal de Trading (Simulation UI)</h2>
+                <p style="color:var(--text-muted); margin-bottom: 15px;">Sélectionnez un token pour voir la courbe et interagir.</p>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-primary" style="background:var(--green); width:50%;" onclick="mockTrade('BUY')">Acheter</button>
+                    <button class="btn-primary" style="background:var(--red); width:50%;" onclick="mockTrade('SELL')">Vendre</button>
+                </div>
+            </div>
 
-    <!-- Chart -->
-    <div class="chart-wrap">
-      <div class="chart-overlay">
-        <button class="chart-tab active" onclick="setMainPeriod('1m',this)">1m</button>
-        <button class="chart-tab" onclick="setMainPeriod('5m',this)">5m</button>
-        <button class="chart-tab" onclick="setMainPeriod('1h',this)">1h</button>
-        <button class="chart-tab" onclick="setMainPeriod('1D',this)">1D</button>
-      </div>
-      <div id="mainChart"></div>
-    </div>
-
-    <!-- Trade bar -->
-    <div class="trade-bar">
-      <!-- Buy side -->
-      <div class="trade-amount-wrap">
-        <div class="trade-input-label">Amount (SOL)</div>
-        <div class="trade-amount-inner" id="buyWrap">
-          <input class="trade-inp" id="buyAmount" type="number" placeholder="0.0" step="0.01" min="0"
-                 oninput="updateEst()" onfocus="this.closest('.trade-amount-inner').classList.add('focus')"
-                 onblur="this.closest('.trade-amount-inner').classList.remove('focus')">
-          <span class="trade-inp-unit">SOL</span>
+            <div id="tokenContainer">
+                <h3>Tokens Disponibles</h3>
+                <div class="token-card">
+                    <h4>🚀 DEGENSAD (SAD)</h4>
+                    <p style="font-size:12px; color:var(--text-muted)">Bonding Curve: 45% - Crée par Rugs Fan</p>
+                </div>
+            </div>
         </div>
-        <div class="quick-btns">
-          <button class="q-btn" onclick="setAmt('buyAmount',0.1)">0.1</button>
-          <button class="q-btn" onclick="setAmt('buyAmount',0.5)">0.5</button>
-          <button class="q-btn" onclick="setAmt('buyAmount',1)">1</button>
-          <button class="q-btn" onclick="setAmt('buyAmount',5)">5</button>
+
+        <div class="panel panel-right">
+            <h3>Live Chat</h3>
+            <div style="flex-grow:1; background:var(--bg-darker); border-radius:6px; border:1px solid var(--border); padding:10px; font-size:13px; color:var(--text-muted);">
+                [Système] Connectez votre wallet Phantom pour participer au chat.
+            </div>
         </div>
-      </div>
+    </div>
 
-      <!-- Center actions -->
-      <div class="trade-actions">
-        <button class="trade-btn btn-buy" id="mainBuyBtn" onclick="quickTrade('buy')">
-          ▲ BUY
-        </button>
-        <div class="trade-estimate-box">
-          <div class="est-row"><span class="est-lbl">Receive</span><span class="est-val" id="estRcv">–</span></div>
-          <div class="est-row"><span class="est-lbl">Impact</span><span class="est-val" id="estImp">–</span></div>
-          <div class="est-row"><span class="est-lbl">Fee 0.25%</span><span class="est-val" id="estFee">–</span></div>
+    <div id="walletInfoModal" class="modal-overlay" onclick="closeModal('walletInfoModal')">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <span>Mon Portefeuille</span>
+                <span class="close-btn" onclick="closeModal('walletInfoModal')">&times;</span>
+            </div>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:5px;">Adresse Publique :</p>
+            <p id="modalWalletAddress" style="font-family:monospace; background:var(--bg-darker); padding:8px; border-radius:4px; font-size:12px; margin-bottom:15px; word-break:break-all;"></p>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:5px;">Solde Réel Wallet :</p>
+            <h3 id="modalWalletBalance" style="margin-bottom:20px;">0.0000 SOL</h3>
+            <button class="btn-primary" onclick="disconnectPhantom()" style="background:var(--red); width:100%;">Se déconnecter</button>
         </div>
-        <button class="trade-btn btn-sell" id="mainSellBtn" onclick="quickTrade('sell')">
-          ▼ SELL
-        </button>
-      </div>
+    </div>
 
-      <!-- Right info -->
-      <div class="trade-amount-wrap" style="text-align:right">
-        <div class="trade-input-label">Your Balance</div>
-        <div style="font-family:var(--font-mono);font-size:18px;font-weight:700;color:var(--text);padding:9px 0" id="mainBalance">– SOL</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:4px" id="mainBondInfo">Select a token to trade</div>
-        <div style="margin-top:8px">
-          <div class="bond-bar" style="height:5px">
-            <div class="bond-fill" id="mainBondFill" style="width:0%"></div>
-          </div>
-          <div class="bond-label" style="margin-top:3px">
-            <span id="mainBondPct">0%</span>
-            <span>→ Raydium 🎓</span>
-          </div>
+    <div id="depositModal" class="modal-overlay" onclick="closeModal('depositModal')">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <span>Dépôt de SOL (Vers la plateforme)</span>
+                <span class="close-btn" onclick="closeModal('depositModal')">&times;</span>
+            </div>
+            <div class="input-group">
+                <label for="depositAmount">Montant à transférer (SOL)</label>
+                <input type="number" id="depositAmount" step="0.01" min="0.001" placeholder="Ex: 0.5">
+            </div>
+            <button class="btn-primary" onclick="depositSol()" style="background:var(--green); width:100%;">Confirmer le dépôt via Phantom</button>
+            <p id="depositStatus" style="font-size:12px; color:var(--text-muted); margin-top:10px; text-align:center;"></p>
         </div>
-      </div>
     </div>
-  </div>
 
-  <!-- ── RIGHT: LEADERBOARD ── -->
-  <div class="panel right-panel">
-    <div class="panel-head">
-      <div class="panel-title">🏆 Leaderboard</div>
-      <span style="font-size:10px;color:var(--muted)">Today</span>
-    </div>
-    <div class="panel-body" style="padding:10px 12px">
-      <div class="lb-list" id="lbList">
-        <div style="color:var(--muted2);font-size:11px;text-align:center;padding:20px">No data yet</div>
-      </div>
-      <div style="height:1px;background:var(--border);margin:12px 0"></div>
-      <div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--muted2);margin-bottom:8px">Live Trades</div>
-      <div id="sidebarTrades">
-        <div style="color:var(--muted2);font-size:11px;text-align:center;padding:10px">No trades yet</div>
-      </div>
-    </div>
-  </div>
-
-</div><!-- /arena -->
-
-<!-- ═══════════════════════════════════════════════
-     TOKEN SECTION (explore grid)
-═══════════════════════════════════════════════ -->
-<div class="token-section">
-  <div class="section-head">
-    <div class="section-title">🔥 Explore Tokens</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-      <div class="filter-strip">
-        <button class="f-btn active" onclick="setFilter('all',this)">All</button>
-        <button class="f-btn" onclick="setFilter('new',this)">🆕 New</button>
-        <button class="f-btn" onclick="setFilter('trending',this)">📈 Trending</button>
-        <button class="f-btn" onclick="setFilter('graduating',this)">🎓 Near Grad</button>
-      </div>
-      <div class="search-wrap">
-        <input class="search-inp" type="text" placeholder="Search…" id="searchInput" oninput="filterTokens()">
-      </div>
-    </div>
-  </div>
-  <div class="token-grid" id="tokenGrid">
-    <div class="empty-state">
-      <div class="es-icon">😢</div>
-      <p>No tokens yet. Be the first to launch one!</p>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════
-     TOKEN MODAL
-═══════════════════════════════════════════════ -->
-<div class="modal-overlay" id="tokenModal">
-  <div class="modal">
-    <div class="modal-left">
-      <div class="modal-header">
-        <div class="modal-av" id="modalAvatar">🚀</div>
-        <div>
-          <div class="modal-name" id="modalName">–</div>
-          <div class="modal-sym"  id="modalSym">–</div>
-        </div>
-        <button class="modal-close" onclick="closeModal()">✕</button>
-      </div>
-      <div class="chart-tabs">
-        <button class="m-chart-tab active" onclick="setChartPeriod('1m',this)">1m</button>
-        <button class="m-chart-tab" onclick="setChartPeriod('5m',this)">5m</button>
-        <button class="m-chart-tab" onclick="setChartPeriod('1h',this)">1h</button>
-        <button class="m-chart-tab" onclick="setChartPeriod('1D',this)">1D</button>
-      </div>
-      <div id="tradeChart"></div>
-      <div class="details-grid">
-        <div class="detail-box"><div class="d-label">Market Cap</div><div class="d-val" id="modalMcap">–</div></div>
-        <div class="detail-box"><div class="d-label">Volume 24h</div><div class="d-val" id="modalVol">–</div></div>
-        <div class="detail-box"><div class="d-label">Holders</div><div class="d-val" id="modalHolders">–</div></div>
-        <div class="detail-box"><div class="d-label">Price</div><div class="d-val" id="modalPrice">–</div></div>
-        <div class="detail-box"><div class="d-label">Creator</div><div class="d-val" id="modalCreator" style="font-size:10px">–</div></div>
-        <div class="detail-box"><div class="d-label">Created</div><div class="d-val" id="modalCreated" style="font-size:10px">–</div></div>
-      </div>
-      <div class="bond-section">
-        <div class="bond-title">Bonding Curve Progress</div>
-        <div class="bond-bar-lg"><div class="bond-fill-lg" id="modalBondFill" style="width:0%"></div></div>
-        <div class="bond-info">
-          <span class="bond-pct" id="modalBondPct">0%</span>
-          <span>100% = Auto-grad to Raydium 🎓</span>
-        </div>
-      </div>
-      <div class="modal-trades-title">Recent Trades</div>
-      <div id="modalTrades"><div style="color:var(--muted2);font-size:11px;padding:8px 0">No trades yet — be the first!</div></div>
-      <div class="comments-section">
-        <div class="comments-title">💬 Comments</div>
-        <div class="comment-form">
-          <input class="comment-input" id="commentInput" placeholder="Say something…">
-          <button class="btn btn-outline" onclick="postComment()">Post</button>
-        </div>
-        <div id="commentsContainer"><div style="color:var(--muted2);font-size:11px">No comments yet.</div></div>
-      </div>
-    </div>
-    <!-- Right trade panel -->
-    <div class="modal-right">
-      <div class="trade-tabs">
-        <button class="trade-tab buy active" onclick="setTradeMode('buy',this)">Buy</button>
-        <button class="trade-tab sell"       onclick="setTradeMode('sell',this)">Sell</button>
-      </div>
-      <div class="wallet-bal">
-        <span>Balance</span>
-        <span id="panelBalance">Connect wallet</span>
-      </div>
-      <div class="amount-wrap">
-        <input type="number" class="amount-inp" id="tradeAmount" placeholder="0.0" step="0.01" min="0" oninput="updateEstimate()">
-        <span class="amount-unit" id="tradeUnit">SOL</span>
-      </div>
-      <div class="quick-amounts">
-        <button class="qa-btn" onclick="setAmount(0.1)">0.1</button>
-        <button class="qa-btn" onclick="setAmount(0.5)">0.5</button>
-        <button class="qa-btn" onclick="setAmount(1)">1</button>
-        <button class="qa-btn" onclick="setAmount(5)">5</button>
-      </div>
-      <div class="trade-estimate">
-        <div class="est-row"><span class="lbl">You receive</span><span class="val" id="estimateReceive">–</span></div>
-        <div class="est-row"><span class="lbl">Price impact</span><span class="val" id="estimateImpact">–</span></div>
-        <div class="est-row"><span class="lbl">Fee (0.25%)</span><span class="val" id="estimateFee">–</span></div>
-      </div>
-      <button class="trade-submit buy" id="tradeSubmitBtn" onclick="executeTrade()">Connect Wallet to Trade</button>
-      <div class="trade-hint">Trades execute on-chain via Solana.<br>DegenSad takes 0.25% platform fee.</div>
-    </div>
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════
-     CREATE TOKEN MODAL
-═══════════════════════════════════════════════ -->
-<div class="create-overlay" id="createOverlay">
-  <div class="create-modal">
-    <h2>🚀 Launch a Token</h2>
-    <p class="create-subtitle">Fill in the details — your token launches instantly on Solana devnet.</p>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Token Name *</label>
-        <input class="form-input" id="createName" placeholder="e.g. DogeKiller" maxlength="32">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Symbol *</label>
-        <input class="form-input" id="createSymbol" placeholder="e.g. DOGEK" maxlength="10" style="text-transform:uppercase">
-      </div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Description</label>
-      <textarea class="form-textarea" id="createDesc" placeholder="What's the vibe of this token?"></textarea>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Token Image</label>
-      <div class="image-upload" onclick="document.getElementById('imageFile').click()">
-        <img id="imagePreview" class="upload-preview" style="display:none">
-        <div id="uploadPlaceholder">
-          <div style="font-size:28px">🖼️</div>
-          <p>Click to upload image (PNG, JPG, GIF)</p>
-        </div>
-        <input type="file" id="imageFile" accept="image/*" onchange="previewImage(this)">
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Twitter / X</label>
-        <input class="form-input" id="createTwitter" placeholder="@handle">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Telegram</label>
-        <input class="form-input" id="createTelegram" placeholder="t.me/group">
-      </div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Website</label>
-      <input class="form-input" id="createWebsite" placeholder="https://...">
-    </div>
-    <div class="create-actions">
-      <button class="btn btn-outline" onclick="closeCreateModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="createToken()">🚀 Launch Token</button>
-    </div>
-  </div>
-</div>
-
-<!-- WALLET INFO MODAL -->
-<div class="modal-overlay" id="walletInfoModal" style="z-index:9999" onclick="if(event.target===this)closeWalletInfoModal()">
-  <div style="background:var(--panel2);border:1px solid var(--border2);border-radius:var(--radius);padding:28px;min-width:340px;max-width:400px;width:90%;box-shadow:var(--shadow),var(--glow-a);animation:dropIn 0.2s ease">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-      <div style="font-size:16px;font-weight:700">Wallet Connected</div>
-      <button onclick="closeWalletInfoModal()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1">✕</button>
-    </div>
-    <div style="background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-bottom:16px">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">Wallet</div>
-      <div style="font-size:15px;font-weight:600" id="wiWalletType">–</div>
-    </div>
-    <div style="background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-bottom:16px">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">Address</div>
-      <div style="font-family:var(--font-mono);font-size:11px;word-break:break-all;color:var(--text);line-height:1.6" id="wiAddress">–</div>
-    </div>
-    <div style="background:var(--panel);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-bottom:20px">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">Balance</div>
-      <div style="font-family:var(--font-mono);font-size:20px;font-weight:700;color:var(--green);text-shadow:var(--glow-g)" id="wiBalance">–</div>
-    </div>
-    <div style="display:flex;gap:10px">
-      <button class="btn btn-ghost" style="flex:1" onclick="closeWalletInfoModal()">Close</button>
-      <button class="btn btn-outline" style="flex:1;border-color:var(--red);color:var(--red)" onclick="disconnectWallet()">⬡ Disconnect</button>
-    </div>
-  </div>
-</div>
-
-<!-- NOTIFICATION -->
-<div class="notif" id="notif"></div>
-
-<!-- FOOTER -->
-<footer>
-  <p>DegenSad — Fair launches on Solana &nbsp;·&nbsp;
-     <a href="#">Docs</a> &nbsp;·&nbsp;
-     <a href="#">Twitter</a> &nbsp;·&nbsp;
-     <a href="#">Telegram</a></p>
-  <p style="margin-top:5px">Smart contract on devnet · Not financial advice · DYOR</p>
-</footer>
-
-
-<script>
-/* ═══════════════════════════════════════════════════════════════
-   DEGENSAD — FULL LOCAL SIMULATION (no backend required)
-═══════════════════════════════════════════════════════════════ */
-
-/* ── GLOBAL STATE ── */
-let walletAddress = null;
-let walletBalance = 0;
-let walletType    = null;
-let currentToken  = null;
-let tradeMode     = 'buy';
-let currentFilter = 'all';
-
-/* ── SIMULATED TOKEN DB ── */
-let allTokens = [
-  { id:'t1', name:'DogeMoon', symbol:'DGMN', emoji:'🐶',
-    description:'The doge that never stopped. To the moon and beyond.',
-    virtual_sol_reserves:32e9, virtual_token_reserves:1040e12,
-    real_sol_reserves:28.4, total_supply:1e15,
-    market_cap:142000, volume_24h:34.2, holders:812,
-    graduated:false, created_at: new Date(Date.now()-7200000).toISOString(),
-    twitter:'@dogemoon', telegram:'t.me/dogemoon', website:'dogemoon.lol' },
-  { id:'t2', name:'PepeKing', symbol:'PPKG', emoji:'🐸',
-    description:'The true king of all pepes. Bow down.',
-    virtual_sol_reserves:45e9, virtual_token_reserves:980e12,
-    real_sol_reserves:67.1, total_supply:1e15,
-    market_cap:890000, volume_24h:128.9, holders:2341,
-    graduated:false, created_at: new Date(Date.now()-14400000).toISOString(),
-    twitter:'@pepeking', telegram:'t.me/pepeking', website:'pepeking.wtf' },
-  { id:'t3', name:'BonkInu', symbol:'BNKI', emoji:'⚡',
-    description:'Faster than Bonk. Stronger than Inu.',
-    virtual_sol_reserves:50e9, virtual_token_reserves:900e12,
-    real_sol_reserves:80.5, total_supply:1e15,
-    market_cap:2100000, volume_24h:412.3, holders:5780,
-    graduated:false, created_at: new Date(Date.now()-86400000).toISOString(),
-    twitter:'@bonkinu', telegram:'', website:'bonkinu.io' },
-  { id:'t4', name:'SadFrog', symbol:'SADF', emoji:'😢',
-    description:'Only down only sad. Buy the dip.',
-    virtual_sol_reserves:30.5e9, virtual_token_reserves:1070e12,
-    real_sol_reserves:3.2, total_supply:1e15,
-    market_cap:18000, volume_24h:6.1, holders:144,
-    graduated:false, created_at: new Date(Date.now()-1800000).toISOString(),
-    twitter:'', telegram:'', website:'' },
-  { id:'t5', name:'DiamondPaws', symbol:'DPAW', emoji:'💎',
-    description:'Diamond hands, diamond paws. Never sell.',
-    virtual_sol_reserves:55e9, virtual_token_reserves:850e12,
-    real_sol_reserves:84.9, total_supply:1e15,
-    market_cap:3800000, volume_24h:680.0, holders:9200,
-    graduated:false, created_at: new Date(Date.now()-172800000).toISOString(),
-    twitter:'@dpaw', telegram:'t.me/dpaw', website:'diamondpaws.com' },
-  { id:'t6', name:'RocketCat', symbol:'RCAT', emoji:'🚀',
-    description:'A cat on a rocket. Simple. Effective. Based.',
-    virtual_sol_reserves:31e9, virtual_token_reserves:1060e12,
-    real_sol_reserves:12.7, total_supply:1e15,
-    market_cap:64000, volume_24h:18.4, holders:390,
-    graduated:false, created_at: new Date(Date.now()-3600000).toISOString(),
-    twitter:'@rocketcat', telegram:'', website:'' },
-];
-
-let allTrades = [];
-let allComments = {};
-
-/* ── SEED SOME TRADES ── */
-const WALLETS = ['Ax7k…3mPq','Bz9f…7rNt','Cy2m…1sKw','Dm4p…9uLx','En6q…2vMy','Fk8r…4wNz','Gp0s…6xOa'];
-function seedTrades() {
-  const types = ['buy','buy','buy','sell','buy'];
-  allTokens.forEach(t => {
-    for (let i=0; i<8; i++) {
-      const type = types[Math.floor(Math.random()*types.length)];
-      const sol  = parseFloat((Math.random()*5+0.1).toFixed(3));
-      const tok  = sol * 800000 * (0.8+Math.random()*0.4);
-      allTrades.push({
-        id: 'tr'+Math.random().toString(36).slice(2),
-        token_id: t.id,
-        wallet: WALLETS[Math.floor(Math.random()*WALLETS.length)],
-        type, sol_amount: sol, token_amount: tok,
-        created_at: new Date(Date.now()-Math.random()*3600000*24).toISOString()
-      });
-    }
-    allComments[t.id] = [
-      { wallet:'Ax7k…3mPq', content:'This is the one. LFG 🚀', created_at: new Date(Date.now()-7200000).toISOString() },
-      { wallet:'Bz9f…7rNt', content:'Bought a bag. Not selling.', created_at: new Date(Date.now()-3600000).toISOString() },
-    ];
-  });
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   MAIN CHART ENGINE — Ultra-fast rugs.fun style
-═══════════════════════════════════════════════════════════════ */
-let mainChart = null;
-let mainChartSeries = null;
-let mainChartPeriod = '1m';
-let simInterval  = null;
-let simInterval2 = null; // sub-tick for price line
-let simMultiplier = 1.0;
-let simBasePrice  = 0.000001;
-let simPrice      = 0.000001;
-let simCandles    = [];
-
-// Market regime — flips aggressively like real memecoins
-let regime = { bias:0.52, vol:0.038, duration:0, max:60 };
-
-function randomRegime() {
-  const r = Math.random();
-  if      (r < 0.25) return { bias:0.68, vol:0.055, duration:0, max:40  }; // strong pump
-  else if (r < 0.45) return { bias:0.32, vol:0.060, duration:0, max:30  }; // dump
-  else if (r < 0.65) return { bias:0.55, vol:0.045, duration:0, max:80  }; // slow pump
-  else if (r < 0.80) return { bias:0.40, vol:0.050, duration:0, max:50  }; // slow bleed
-  else               return { bias:0.50, vol:0.025, duration:0, max:100 }; // crab
-}
-
-function initMainChart() {
-  const container = document.getElementById('mainChart');
-  if (!container) return;
-  container.innerHTML = '';
-  if (mainChart) { try { mainChart.remove(); } catch(e){} mainChart = null; }
-
-  mainChart = LightweightCharts.createChart(container, {
-    layout: { background:{color:'transparent'}, textColor:'#5a6080' },
-    grid: { vertLines:{color:'rgba(26,29,46,0.8)'}, horzLines:{color:'rgba(26,29,46,0.8)'} },
-    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-    rightPriceScale: { borderColor:'#23273c', scaleMargins:{top:0.08,bottom:0.08}, minimumWidth:80 },
-    timeScale: { borderColor:'#23273c', timeVisible:true, secondsVisible:true },
-    handleScroll: true, handleScale: true,
-  });
-
-  mainChartSeries = mainChart.addCandlestickSeries({
-    upColor:'#32ff7e', downColor:'#ff4d6d',
-    borderUpColor:'#32ff7e', borderDownColor:'#ff4d6d',
-    wickUpColor:'rgba(50,255,126,0.7)', wickDownColor:'rgba(255,77,109,0.7)',
-  });
-
-  const ro = new ResizeObserver(() => {
-    if (mainChart && container.clientWidth) {
-      mainChart.applyOptions({ width: container.clientWidth, height: container.clientHeight });
-    }
-  });
-  ro.observe(container);
-
-  regime = randomRegime();
-  seedHistoricalCandles();
-  startSimulation();
-}
-
-function seedHistoricalCandles() {
-  const secMap = { '1m':60,'5m':300,'1h':3600,'1D':86400 };
-  const sec = secMap[mainChartPeriod] || 60;
-  const now = Math.floor(Date.now()/1000);
-  simCandles = [];
-
-  let p = 0.000001 * (0.3 + Math.random() * 1.4);
-  simBasePrice = p;
-  simPrice     = p;
-
-  // Seed 120 candles with regime changes
-  let reg = randomRegime();
-  for (let i = 119; i >= 0; i--) {
-    const t  = now - i * sec;
-    reg.duration++;
-    if (reg.duration > reg.max) reg = randomRegime();
-
-    // Multiple micro-moves per candle
-    let lo = p, hi = p, close = p;
-    const steps = 8;
-    for (let s = 0; s < steps; s++) {
-      const up   = Math.random() < reg.bias;
-      const move = 1 + (Math.random() * reg.vol) * (up ? 1 : -1);
-      // Occasional spike
-      const spike = Math.random() < 0.04 ? (up ? 1.08 : 0.93) : 1;
-      close = close * move * spike;
-      close = Math.max(close, p * 0.001);
-      hi = Math.max(hi, close);
-      lo = Math.min(lo, close);
-    }
-    const o  = p;
-    const wH = hi * (1 + Math.random() * 0.02);
-    const wL = lo * (1 - Math.random() * 0.02);
-    simCandles.push({ time:t, open:o, high:wH, low:wL, close });
-    p = close;
-  }
-
-  simPrice     = p;
-  simBasePrice = simCandles[0].open;
-  if (mainChartSeries) {
-    mainChartSeries.setData(simCandles);
-    mainChart.timeScale().scrollToRealTime();
-  }
-  updateMultiplier();
-}
-
-function startSimulation() {
-  if (simInterval)  clearInterval(simInterval);
-  if (simInterval2) clearInterval(simInterval2);
-
-  // Fast tick: update current candle OHLC every 100ms
-  const secMap = { '1m':60,'5m':300,'1h':3600,'1D':86400 };
-  const sec = secMap[mainChartPeriod] || 60;
-
-  simInterval = setInterval(() => {
-    // Regime change check
-    regime.duration++;
-    if (regime.duration > regime.max) regime = randomRegime();
-
-    // Price move
-    const up    = Math.random() < regime.bias;
-    const move  = 1 + (Math.random() * regime.vol) * (up ? 1 : -1);
-    const spike = Math.random() < 0.035 ? (Math.random() < 0.55 ? 1.06 : 0.94) : 1;
-    const newP  = simPrice * move * spike;
-    simPrice    = Math.max(newP, simBasePrice * 0.01);
-
-    const now        = Math.floor(Date.now() / 1000);
-    const bucketTime = Math.floor(now / sec) * sec;
-    const lastC      = simCandles[simCandles.length - 1];
-
-    if (lastC && bucketTime === lastC.time) {
-      lastC.close = simPrice;
-      lastC.high  = Math.max(lastC.high, simPrice);
-      lastC.low   = Math.min(lastC.low,  simPrice);
-      if (mainChartSeries) mainChartSeries.update(lastC);
-    } else {
-      const newC = { time:bucketTime, open:simPrice, high:simPrice, low:simPrice, close:simPrice };
-      simCandles.push(newC);
-      if (simCandles.length > 200) simCandles.shift();
-      if (mainChartSeries) mainChartSeries.update(newC);
-    }
-
-    updateMultiplier();
-    updateTokenBar();
-    updatePnlLive(); // live PnL update every tick
-  }, 100); // ← 100ms tick like rugs.fun
-}
-
-function updateMultiplier() {
-  const mult = simPrice / simBasePrice;
-  simMultiplier = mult;
-  const el = document.getElementById('multValue');
-  if (!el) return;
-  const pct = Math.min(100, Math.max(0, (mult - 0.2) / 9 * 100));
-  const cls = mult >= 2 ? 'up' : mult < 1 ? 'dn' : '';
-  el.textContent = mult >= 10 ? mult.toFixed(1)+'x' : mult.toFixed(2)+'x';
-  el.className   = 'mult-value ' + cls;
-  document.querySelectorAll('.mult-bar-fill').forEach(f => {
-    f.style.width = pct + '%';
-    f.style.background =
-      mult >= 3 ? 'linear-gradient(90deg,var(--green),var(--accent2))' :
-      mult < 1  ? 'linear-gradient(90deg,var(--red),#ff6600)' :
-                  'linear-gradient(90deg,var(--gold),var(--green))';
-  });
-}
-
-function setMainPeriod(period, el) {
-  mainChartPeriod = period;
-  document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  if (simInterval)  clearInterval(simInterval);
-  if (simInterval2) clearInterval(simInterval2);
-  regime = randomRegime();
-  seedHistoricalCandles();
-  startSimulation();
-}
-
-function updateTokenBar() {
-  if (!currentToken) return;
-  const price = simPrice < 0.0001 ? simPrice.toExponential(3) : simPrice.toFixed(6);
-  const pct   = ((simPrice - simBasePrice) / simBasePrice * 100).toFixed(2);
-  const sign  = pct >= 0 ? '+' : '';
-  const el  = document.getElementById('tbPrice');
-  const chg = document.getElementById('tbChange');
-  if (el)  el.textContent = '$' + price;
-  if (chg) { chg.textContent = sign + pct + '%'; chg.className = 'token-bar-change ' + (pct >= 0 ? 'up' : 'dn'); }
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   PnL TRACKER
-═══════════════════════════════════════════════════════════════ */
-// Each position: { tokenId, solSpent, tokensHeld, entryPrice, entryTime }
-let myPositions = {};
-
-function recordBuy(tokenId, solAmount, tokensReceived) {
-  const existing = myPositions[tokenId];
-  const ep = simPrice;
-  if (existing) {
-    const totalSol   = existing.solSpent + solAmount;
-    const totalToks  = existing.tokensHeld + tokensReceived;
-    existing.solSpent    = totalSol;
-    existing.tokensHeld  = totalToks;
-    existing.entryPrice  = ep; // use latest price as avg basis
-  } else {
-    myPositions[tokenId] = { solSpent:solAmount, tokensHeld:tokensReceived, entryPrice:ep, entryTime:Date.now() };
-  }
-  showPnlPanel(tokenId);
-}
-
-function recordSell(tokenId, solReceived) {
-  const pos = myPositions[tokenId];
-  if (!pos) return;
-  const pnl     = solReceived - pos.solSpent;
-  const pnlPct  = (pnl / pos.solSpent * 100).toFixed(1);
-  const won     = pnl >= 0;
-  showPnlResult(pnl, pnlPct, won, pos.solSpent, solReceived);
-  delete myPositions[tokenId];
-  hidePnlPanel();
-}
-
-function updatePnlLive() {
-  if (!currentToken || !myPositions[currentToken.id]) return;
-  const pos    = myPositions[currentToken.id];
-  const curVal = pos.tokensHeld * simPrice;      // current value in price units
-  // Simple ratio: current price vs entry price
-  const pnlPct = ((simPrice - pos.entryPrice) / pos.entryPrice * 100);
-  const pnlSol = pos.solSpent * (pnlPct / 100);
-  const won    = pnlPct >= 0;
-
-  const panel = document.getElementById('pnlPanel');
-  if (!panel) return;
-  panel.style.display = 'flex';
-  const sign = won ? '+' : '';
-  document.getElementById('pnlValue').textContent  = sign + pnlSol.toFixed(4) + ' SOL';
-  document.getElementById('pnlPct').textContent    = sign + pnlPct.toFixed(2) + '%';
-  document.getElementById('pnlValue').style.color  = won ? 'var(--green)' : 'var(--red)';
-  document.getElementById('pnlPct').style.color    = won ? 'var(--green)' : 'var(--red)';
-  document.getElementById('pnlEntry').textContent  = '$' + pos.entryPrice.toExponential(3);
-  document.getElementById('pnlCurrent').textContent= '$' + simPrice.toExponential(3);
-}
-
-function showPnlPanel(tokenId) {
-  const panel = document.getElementById('pnlPanel');
-  if (panel) panel.style.display = 'flex';
-}
-function hidePnlPanel() {
-  const panel = document.getElementById('pnlPanel');
-  if (panel) panel.style.display = 'none';
-}
-
-function showPnlResult(pnl, pnlPct, won, invested, received) {
-  const overlay = document.getElementById('pnlResultOverlay');
-  if (!overlay) return;
-  const sign = won ? '+' : '';
-  const emoji = won ? (Math.abs(parseFloat(pnlPct))>50?'🚀':'💰') : (Math.abs(parseFloat(pnlPct))>50?'💀':'📉');
-  document.getElementById('pnlResultEmoji').textContent  = emoji;
-  document.getElementById('pnlResultTitle').textContent  = won ? 'PROFIT!' : 'REKT!';
-  document.getElementById('pnlResultTitle').style.color  = won ? 'var(--green)' : 'var(--red)';
-  document.getElementById('pnlResultPnl').textContent    = sign + pnl.toFixed(4) + ' SOL';
-  document.getElementById('pnlResultPnl').style.color    = won ? 'var(--green)' : 'var(--red)';
-  document.getElementById('pnlResultPct').textContent    = sign + pnlPct + '%';
-  document.getElementById('pnlResultPct').style.color    = won ? 'var(--green)' : 'var(--red)';
-  document.getElementById('pnlResultInvested').textContent = invested.toFixed(4) + ' SOL';
-  document.getElementById('pnlResultReceived').textContent = received.toFixed(4) + ' SOL';
-  overlay.classList.add('open');
-  setTimeout(() => overlay.classList.remove('open'), 5000);
-}
-function closePnlResult() { document.getElementById('pnlResultOverlay').classList.remove('open'); }
-
-/* ═══════════════════════════════════════════════════════════════
-   MODAL CHART
-═══════════════════════════════════════════════════════════════ */
-let modalChart=null, modalChartSeries=null, modalChartPeriod='1m';
-
-function initModalChart(tokenId) {
-  const container = document.getElementById('tradeChart');
-  if (!container) return;
-  if (modalChart) { try{modalChart.remove();}catch(e){} modalChart=null; }
-  modalChart = LightweightCharts.createChart(container,{
-    layout:{background:{color:'transparent'},textColor:'#5a6080'},
-    grid:{vertLines:{color:'#1a1d2e'},horzLines:{color:'#1a1d2e'}},
-    rightPriceScale:{borderColor:'#23273c'},
-    timeScale:{borderColor:'#23273c',timeVisible:true},
-    width:container.clientWidth, height:260,
-  });
-  modalChartSeries = modalChart.addCandlestickSeries({
-    upColor:'#32ff7e',downColor:'#ff4d6d',
-    borderUpColor:'#32ff7e',borderDownColor:'#ff4d6d',
-    wickUpColor:'#32ff7e',wickDownColor:'#ff4d6d',
-  });
-  loadModalChartData();
-}
-
-function loadModalChartData() {
-  if (!modalChartSeries) return;
-  const sec={'1m':60,'5m':300,'1h':3600,'1D':86400}[modalChartPeriod]||60;
-  const now=Math.floor(Date.now()/1000);
-  const candles=[];
-  let p=0.000001*(0.5+Math.random());
-  for (let i=79;i>=0;i--) {
-    const t=now-i*sec;
-    const dr=1+(Math.random()-0.48)*0.022;
-    const o=p, c=p*dr;
-    const hi=Math.max(o,c)*(1+Math.random()*0.012);
-    const lo=Math.min(o,c)*(1-Math.random()*0.012);
-    candles.push({time:t,open:o,high:hi,low:lo,close:c});
-    p=c;
-  }
-  modalChartSeries.setData(candles);
-}
-
-function setChartPeriod(period, el) {
-  modalChartPeriod = period;
-  document.querySelectorAll('.m-chart-tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  loadModalChartData();
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   TOKEN GRID
-═══════════════════════════════════════════════════════════════ */
-function renderTokens(tokens) {
-  const grid = document.getElementById('tokenGrid');
-  if (!tokens.length) {
-    grid.innerHTML='<div class="empty-state"><div class="es-icon">😢</div><p>No tokens found.</p></div>';
-    return;
-  }
-  grid.innerHTML = tokens.map(t => {
-    const pct  = Math.min(100,(t.real_sol_reserves/85*100)).toFixed(1);
-    const mcap = formatUSD(t.market_cap||0);
-    const age  = timeAgo(t.created_at);
-    let badge='';
-    if (pct>=80) badge='<span class="card-badge badge-grad">🎓 Graduating</span>';
-    else if (new Date()-new Date(t.created_at)<3600000) badge='<span class="card-badge badge-new">New</span>';
-    else if ((t.volume_24h||0)>50) badge='<span class="card-badge badge-hot">🔥 Hot</span>';
-    return `
-    <div class="token-card" onclick="openToken('${t.id}')">
-      <div class="card-header">
-        <div class="token-avatar">${t.emoji||'🚀'}</div>
-        <div><div class="token-name">${t.name}</div><div class="token-symbol">$${t.symbol}</div></div>
-        ${badge}
-      </div>
-      <div class="card-stats">
-        <div class="c-stat"><div class="c-label">Market Cap</div><div class="c-val">${mcap}</div></div>
-        <div class="c-stat"><div class="c-label">Volume 24h</div><div class="c-val">${formatSOL(t.volume_24h||0)} SOL</div></div>
-        <div class="c-stat"><div class="c-label">Holders</div><div class="c-val">${t.holders||0}</div></div>
-        <div class="c-stat"><div class="c-label">Age</div><div class="c-val">${age}</div></div>
-      </div>
-      <div class="bond-bar"><div class="bond-fill" style="width:${pct}%"></div></div>
-      <div class="bond-label"><span>${pct}% bonding</span><span>${pct>=100?'🎓 Raydium':'→ Raydium'}</span></div>
-    </div>`;
-  }).join('');
-}
-
-function loadTokens() {
-  renderTokens(allTokens);
-  buildTicker(allTokens);
-  updateStats();
-  buildLeaderboard();
-}
-
-function updateStats() {
-  const trades = allTrades;
-  const volume = trades.reduce((s,t)=>s+parseFloat(t.sol_amount||0),0);
-  document.getElementById('statTokens').textContent    = allTokens.length;
-  document.getElementById('statTrades').textContent    = trades.length;
-  document.getElementById('statVolume').textContent    = volume.toFixed(1);
-  document.getElementById('statGraduated').textContent = allTokens.filter(t=>t.graduated).length;
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   TOKEN MODAL
-═══════════════════════════════════════════════════════════════ */
-function openToken(id) {
-  const t = allTokens.find(x=>x.id===id);
-  if (!t) return;
-  currentToken = t;
-  const pct = Math.min(100,(t.real_sol_reserves/85*100)).toFixed(1);
-  const price = t.market_cap && t.total_supply ? (t.market_cap/t.total_supply) : 0.000001;
-
-  document.getElementById('modalAvatar').textContent  = t.emoji||'🚀';
-  document.getElementById('modalName').textContent    = t.name;
-  document.getElementById('modalSym').textContent     = '$'+t.symbol;
-  document.getElementById('modalMcap').textContent    = formatUSD(t.market_cap||0);
-  document.getElementById('modalVol').textContent     = formatSOL(t.volume_24h||0)+' SOL';
-  document.getElementById('modalHolders').textContent = t.holders||0;
-  document.getElementById('modalPrice').textContent   = '$'+price.toExponential(3);
-  document.getElementById('modalCreator').textContent = 'DegenUser_'+t.id.toUpperCase();
-  document.getElementById('modalCreated').textContent = timeAgo(t.created_at);
-  document.getElementById('modalBondFill').style.width= pct+'%';
-  document.getElementById('modalBondPct').textContent = pct+'%';
-
-  // Token bar update
-  document.getElementById('tbAvatar').textContent = t.emoji||'🚀';
-  document.getElementById('tbName').textContent   = t.name;
-  document.getElementById('tbSym').textContent    = '$'+t.symbol;
-  document.getElementById('tbPrice').textContent  = '$'+price.toExponential(3);
-
-  document.getElementById('tokenModal').classList.add('open');
-  document.body.style.overflow='hidden';
-  initModalChart(id);
-  renderModalTrades(id);
-  renderComments(id);
-  updateTradeButton();
-}
-
-function closeModal() {
-  document.getElementById('tokenModal').classList.remove('open');
-  document.body.style.overflow='';
-}
-
-function renderModalTrades(tokenId) {
-  const trades = allTrades.filter(t=>t.token_id===tokenId).slice(-10).reverse();
-  const el = document.getElementById('modalTrades');
-  if (!trades.length) { el.innerHTML='<div style="color:var(--muted2);font-size:11px;padding:8px 0">No trades yet — be the first!</div>'; return; }
-  el.innerHTML = trades.map(t=>`
-    <div class="modal-trade-row">
-      <span style="color:${t.type==='buy'?'var(--green)':'var(--red)'};font-weight:700;width:34px">${t.type==='buy'?'BUY':'SELL'}</span>
-      <span style="color:var(--muted);font-size:10px;font-family:var(--font-mono)">${t.wallet}</span>
-      <span style="margin-left:auto;font-family:var(--font-mono);font-size:11px">${parseFloat(t.sol_amount).toFixed(3)} SOL</span>
-      <span style="color:var(--muted2);font-size:9px;margin-left:8px">${timeAgo(t.created_at)}</span>
-    </div>`).join('');
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   TRADE LOGIC
-═══════════════════════════════════════════════════════════════ */
-function setTradeMode(mode, el) {
-  tradeMode = mode;
-  document.querySelectorAll('.trade-tab').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
-  const unit = document.getElementById('tradeUnit');
-  if (unit) unit.textContent = mode==='buy' ? 'SOL' : (currentToken?.symbol||'TOKEN');
-  updateEstimate();
-  updateTradeButton();
-}
-
-function setAmount(v) {
-  const el = document.getElementById('tradeAmount');
-  if (el) { el.value=v; updateEstimate(); }
-}
-
-function setAmt(id, v) {
-  const el = document.getElementById(id);
-  if (el) { el.value=v; updateEst(); }
-}
-
-function updateEstimate() {
-  if (!currentToken) return;
-  const amount = parseFloat(document.getElementById('tradeAmount')?.value||0);
-  if (!amount||amount<=0) {
-    ['estimateReceive','estimateImpact','estimateFee'].forEach(id=>{ const e=document.getElementById(id); if(e) e.textContent='–'; });
-    return;
-  }
-  const vSol=parseFloat(currentToken.virtual_sol_reserves)||30e9;
-  const vTok=parseFloat(currentToken.virtual_token_reserves)||1073e12;
-  let receive='', impact='';
-  const fee = (amount*0.0025).toFixed(4);
-  if (tradeMode==='buy') {
-    const after=amount-amount*0.0025;
-    const tok=(after*1e9*vTok)/(vSol+after*1e9)/1e6;
-    receive = formatNum(tok)+' '+(currentToken.symbol||'TOKEN');
-    impact  = (after/(vSol/1e9)*100).toFixed(2)+'%';
-  } else {
-    const sol=(amount*1e6*vSol)/(vTok+amount*1e6)/1e9;
-    receive = sol.toFixed(4)+' SOL';
-    impact  = (amount*1e6/vTok*100).toFixed(2)+'%';
-  }
-  const elR=document.getElementById('estimateReceive');
-  const elI=document.getElementById('estimateImpact');
-  const elF=document.getElementById('estimateFee');
-  if(elR) elR.textContent=receive;
-  if(elI) elI.textContent=impact;
-  if(elF) elF.textContent=fee+' SOL';
-}
-
-function updateEst() {
-  if (!currentToken) return;
-  const amount = parseFloat(document.getElementById('buyAmount')?.value||0);
-  const vSol=parseFloat(currentToken.virtual_sol_reserves)||30e9;
-  const vTok=parseFloat(currentToken.virtual_token_reserves)||1073e12;
-  if (!amount||amount<=0) {
-    ['estRcv','estImp','estFee'].forEach(id=>{ const e=document.getElementById(id); if(e) e.textContent='–'; });
-    return;
-  }
-  const after=amount-amount*0.0025;
-  const tok=(after*1e9*vTok)/(vSol+after*1e9)/1e6;
-  const elR=document.getElementById('estRcv');
-  const elI=document.getElementById('estImp');
-  const elF=document.getElementById('estFee');
-  if(elR) elR.textContent=formatNum(tok)+' '+(currentToken.symbol||'TOKEN');
-  if(elI) elI.textContent=(after/(vSol/1e9)*100).toFixed(2)+'%';
-  if(elF) elF.textContent=(amount*0.0025).toFixed(4)+' SOL';
-}
-
-function updateTradeButton() {
-  const btn = document.getElementById('tradeSubmitBtn');
-  if (!btn) return;
-  if (!walletAddress) {
-    btn.textContent='Connect Wallet to Trade'; btn.className='trade-submit buy'; return;
-  }
-  if (!currentToken) {
-    btn.textContent='Select a token'; btn.className='trade-submit buy'; return;
-  }
-  if (tradeMode==='buy') {
-    btn.textContent='▲ BUY '+currentToken.symbol; btn.className='trade-submit buy';
-  } else {
-    btn.textContent='▼ SELL '+currentToken.symbol; btn.className='trade-submit sell';
-  }
-}
-
-function executeTrade() {
-  if (!walletAddress) { connectWallet(); return; }
-  if (!currentToken)  { showNotif('Select a token first','error'); return; }
-  const amount = parseFloat(document.getElementById('tradeAmount')?.value||0);
-  if (!amount||amount<=0) { showNotif('Enter a valid amount','error'); return; }
-
-  const btn = document.getElementById('tradeSubmitBtn');
-  btn.disabled=true; btn.textContent='Processing…';
-
-  setTimeout(() => {
-    const vSol = parseFloat(currentToken.virtual_sol_reserves)||30e9;
-    const vTok = parseFloat(currentToken.virtual_token_reserves)||1073e12;
-    let tokensOut = 0, solOut = 0;
-    if (tradeMode==='buy') {
-      const after = amount - amount*0.0025;
-      tokensOut = (after*1e9*vTok)/(vSol+after*1e9)/1e6;
-    } else {
-      solOut = (amount*1e6*vSol)/(vTok+amount*1e6)/1e9;
-    }
-
-    const trade = {
-      id:'tr'+Math.random().toString(36).slice(2),
-      token_id:currentToken.id,
-      wallet: walletAddress.slice(0,6)+'…'+walletAddress.slice(-4),
-      type:tradeMode, sol_amount: tradeMode==='buy'?amount:solOut,
-      token_amount: tradeMode==='buy'?tokensOut:amount,
-      created_at:new Date().toISOString()
-    };
-    allTrades.unshift(trade);
-
-    const tok = allTokens.find(x=>x.id===currentToken.id);
-    if (tok) {
-      if (tradeMode==='buy') {
-        tok.real_sol_reserves += amount;
-        tok.volume_24h += amount;
-        tok.holders += 1;
-        tok.market_cap = (tok.market_cap||0)+amount*1200;
-      } else {
-        tok.real_sol_reserves = Math.max(0,(tok.real_sol_reserves||0)-amount);
-        tok.volume_24h += amount;
-        tok.market_cap = Math.max(0,(tok.market_cap||0)-amount*900);
-      }
-      currentToken = tok;
-    }
-
-    // PnL tracking
-    if (tradeMode==='buy')  recordBuy(currentToken.id, amount, tokensOut);
-    if (tradeMode==='sell') recordSell(currentToken.id, solOut);
-
-    showNotif(`${tradeMode==='buy'?'🟢 Bought':'🔴 Sold'} ${amount} ${tradeMode==='buy'?'SOL':currentToken.symbol}!`,'success');
-    document.getElementById('tradeAmount').value='';
-    updateEstimate();
-    renderModalTrades(currentToken.id);
-    addLiveTrade(trade);
-    updateStats();
-    btn.disabled=false;
-    updateTradeButton();
-  }, 600);
-}
-
-function quickTrade(mode) {
-  if (!walletAddress) { showNotif('Connect wallet first!','error'); connectWallet(); return; }
-  if (!currentToken)  { showNotif('Select a token to trade','error'); return; }
-  const amount = parseFloat(document.getElementById('buyAmount')?.value||0);
-  if (!amount||amount<=0) { showNotif('Enter an amount','error'); return; }
-  const btn = mode==='buy' ? document.getElementById('mainBuyBtn') : document.getElementById('mainSellBtn');
-  btn.disabled=true; btn.textContent='Processing…';
-  setTimeout(() => {
-    const trade = {
-      id:'tr'+Math.random().toString(36).slice(2),
-      token_id:currentToken.id,
-      wallet:walletAddress.slice(0,6)+'…'+walletAddress.slice(-4),
-      type:mode, sol_amount:amount,
-      token_amount:amount*800000*(0.8+Math.random()*0.4),
-      created_at:new Date().toISOString()
-    };
-    allTrades.unshift(trade);
-    const tok=allTokens.find(x=>x.id===currentToken.id);
-    if (tok) {
-      tok.volume_24h  += amount;
-      tok.real_sol_reserves = Math.max(0,(tok.real_sol_reserves||0)+(mode==='buy'?amount:-amount));
-      tok.market_cap  = Math.max(0,(tok.market_cap||0)+(mode==='buy'?amount*1200:-amount*900));
-      currentToken=tok;
-    }
-    showNotif(`${mode==='buy'?'🟢 Bought':'🔴 Sold'} ${amount} ${mode==='buy'?'SOL':currentToken.symbol}!`,'success');
-    document.getElementById('buyAmount').value='';
-    updateEst();
-    addLiveTrade(trade);
-    updateStats();
-    btn.disabled=false;
-    btn.textContent = mode==='buy'?'▲ BUY':'▼ SELL';
-  },900);
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   COMMENTS
-═══════════════════════════════════════════════════════════════ */
-function renderComments(tokenId) {
-  const comments = (allComments[tokenId]||[]).slice().reverse();
-  const el = document.getElementById('commentsContainer');
-  if (!comments.length) { el.innerHTML='<div style="color:var(--muted2);font-size:11px">No comments yet.</div>'; return; }
-  el.innerHTML = comments.map(c=>`
-    <div class="comment">
-      <div class="comment-addr">${c.wallet}</div>
-      <div class="comment-text">${escapeHTML(c.content)}</div>
-      <div class="comment-time">${timeAgo(c.created_at)}</div>
-    </div>`).join('');
-}
-
-function postComment() {
-  if (!currentToken) return;
-  const inp = document.getElementById('commentInput');
-  const txt = inp.value.trim();
-  if (!txt) return;
-  const wallet = walletAddress ? walletAddress.slice(0,6)+'…'+walletAddress.slice(-4) : 'Anon_'+Math.random().toString(36).slice(2,8);
-  if (!allComments[currentToken.id]) allComments[currentToken.id]=[];
-  allComments[currentToken.id].push({ wallet, content:txt, created_at:new Date().toISOString() });
-  inp.value='';
-  renderComments(currentToken.id);
-  showNotif('Comment posted!','success');
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   LIVE TRADES SIDEBAR
-═══════════════════════════════════════════════════════════════ */
-function addLiveTrade(t) {
-  const el = document.getElementById('liveTrades');
-  if (!el) return;
-  const tok = allTokens.find(x=>x.id===t.token_id);
-  const sym = tok?.symbol||'???';
-  const row = document.createElement('div');
-  row.className='lb-item';
-  row.style.cssText='animation:fadeIn 0.3s ease;padding:8px 12px;border-bottom:1px solid var(--border)';
-  row.innerHTML=`
-    <span style="color:${t.type==='buy'?'var(--green)':'var(--red)'};font-weight:700;font-size:11px;width:30px">${t.type==='buy'?'BUY':'SELL'}</span>
-    <span style="font-family:var(--font-mono);font-size:10px;color:var(--muted);flex:1;margin:0 6px">$${sym}</span>
-    <span style="font-family:var(--font-mono);font-size:11px;font-weight:700">${parseFloat(t.sol_amount).toFixed(3)} SOL</span>`;
-  el.prepend(row);
-  // Keep max 20
-  while(el.children.length>20) el.removeChild(el.lastChild);
-}
-
-function loadLiveTrades() {
-  const el = document.getElementById('liveTrades');
-  if (!el) return;
-  const recent = allTrades.slice(0,12);
-  if (!recent.length) { el.innerHTML='<div style="color:var(--muted2);font-size:11px;padding:12px;text-align:center">No trades yet</div>'; return; }
-  recent.forEach(t => addLiveTrade(t));
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   LEADERBOARD
-═══════════════════════════════════════════════════════════════ */
-const SIM_TRADERS = [
-  {addr:'Ax7k…3mPq',tag:'🐋 Whale', pnl:+142.5,cls:'gold'},
-  {addr:'Bz9f…7rNt',tag:'🦈 Shark', pnl:+88.3, cls:'silver'},
-  {addr:'Cy2m…1sKw',tag:'🦊 Degen', pnl:+55.1, cls:'bronze'},
-  {addr:'Dm4p…9uLx',tag:'🤖 Bot',   pnl:+22.7, cls:''},
-  {addr:'En6q…2vMy',tag:'🐸 Frog',  pnl:+11.2, cls:''},
-  {addr:'Fk8r…4wNz',tag:'🐻 Bear',  pnl:-8.4,  cls:''},
-  {addr:'Gp0s…6xOa',tag:'💀 Rekt',  pnl:-31.9, cls:''},
-];
-
-function buildLeaderboard() {
-  const list = document.getElementById('lbList');
-  if (!list) return;
-  const avatars=['🚀','💎','🐸','🦊','⚡','🐻','💀'];
-  const colors=['rgba(124,92,252,0.2)','rgba(50,255,126,0.15)','rgba(255,77,109,0.15)','rgba(255,204,0,0.12)','rgba(94,223,255,0.12)','rgba(124,92,252,0.1)','rgba(255,77,109,0.08)'];
-  list.innerHTML = SIM_TRADERS.map((t,i)=>`
-    <div class="lb-item" style="animation-delay:${i*60}ms">
-      <div class="lb-rank ${t.cls}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':'#'+(i+1)}</div>
-      <div class="lb-avatar" style="background:${colors[i]}">${avatars[i]}</div>
-      <div class="lb-info">
-        <div class="lb-addr">${t.addr}</div>
-        <div class="lb-tag">${t.tag}</div>
-      </div>
-      <div class="lb-pnl ${t.pnl>=0?'up':'dn'}">${t.pnl>=0?'+':''}${t.pnl.toFixed(1)} SOL</div>
-    </div>`).join('');
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   TICKER BAR
-═══════════════════════════════════════════════════════════════ */
-function buildTicker(tokens) {
-  const bar   = document.getElementById('tickerBar');
-  const inner = document.getElementById('tickerInner');
-  if (!tokens?.length) { bar.style.display='none'; return; }
-  const items = [...tokens,...tokens].map(t=>{
-    const price=t.market_cap&&t.total_supply?(t.market_cap/t.total_supply):0;
-    const priceStr=price>0?'$'+price.toExponential(2):'$0';
-    const vol=t.volume_24h||0;
-    const cls=vol>0?'up':'dn', sign=vol>0?'+':'';
-    return `<span class="ticker-item"><span class="sym">$${t.symbol}</span> ${priceStr} <span class="${cls}">${sign}${vol.toFixed(2)} SOL</span></span>`;
-  }).join('');
-  inner.innerHTML=items;
-  bar.style.display='block';
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   COMMUNITY CHAT
-═══════════════════════════════════════════════════════════════ */
-const CHAT_USERS = [
-  {addr:'Ax7k…3mPq',badge:'whale',badgeLbl:'🐋 Whale',color:'#7c5cfc'},
-  {addr:'Bz9f…7rNt',badge:'degen',badgeLbl:'💎 Degen',color:'#5edfff'},
-  {addr:'Cy2m…1sKw',badge:'',     badgeLbl:'',         color:'#32ff7e'},
-  {addr:'Dm4p…9uLx',badge:'mod',  badgeLbl:'⚡ Mod',   color:'#ffcc00'},
-  {addr:'En6q…2vMy',badge:'',     badgeLbl:'',         color:'#ff4d6d'},
-];
-const CHAT_MSGS = [
-  'LFG 🚀🚀🚀','This is the one fr','Buy or cry later 💎','ser wen moon',
-  'Aping in rn ngmi if you dont','WAGMI fam','This looks like a 100x','pump incoming 👀',
-  'DYOR but this is clean','just bought a huge bag ngl','volume is heating up',
-  'whales accumulating rn','chart looking bullish af','im not selling ever',
-  'devs doxxed and based','liquidity locked 🔒','gem alert 🔔','community is based',
-];
-let onlineCount = Math.floor(Math.random()*80)+40;
-
-function initChat() {
-  updateOnlineCount();
-  buildEvents();
-  setInterval(()=>{
-    if (Math.random()<0.7) addSimChatMsg();
-  }, Math.random()*3000+4000);
-  setInterval(()=>{
-    onlineCount += Math.floor(Math.random()*7)-3;
-    onlineCount  = Math.max(20, Math.min(200, onlineCount));
-    updateOnlineCount();
-  }, 5000);
-}
-
-function updateOnlineCount() {
-  const el = document.getElementById('onlineCount');
-  if (el) el.textContent = '● '+onlineCount+' online';
-}
-
-function addSimChatMsg() {
-  const user = CHAT_USERS[Math.floor(Math.random()*CHAT_USERS.length)];
-  const msg  = CHAT_MSGS[Math.floor(Math.random()*CHAT_MSGS.length)];
-  appendChatMsg(user.addr, user.badge, user.badgeLbl, user.color, msg, 'now');
-  setTimeout(()=>{
-    if (Math.random()<0.7) addSimChatMsg();
-  }, Math.random()*4000+4000);
-}
-
-function appendChatMsg(addr, badge, badgeLbl, color, text, time) {
-  const el = document.getElementById('chatMessages');
-  if (!el) return;
-  const badgeHtml = badgeLbl ? `<span class="chat-badge badge-${badge}">${badgeLbl}</span>` : '';
-  const initials  = addr.slice(0,2).toUpperCase();
-  const div = document.createElement('div');
-  div.className='chat-msg';
-  div.innerHTML=`
-    <div class="chat-msg-header">
-      <div class="chat-avatar" style="background:${color}22;color:${color}">${initials}</div>
-      <span class="chat-addr ${badge}">${addr}</span>
-      ${badgeHtml}
-      <span class="chat-time">${time}</span>
-    </div>
-    <div class="chat-text">${escapeHTML(text)}</div>`;
-  el.appendChild(div);
-  el.scrollTop = el.scrollHeight;
-  // Keep max 50 msgs
-  while(el.children.length>50) el.removeChild(el.firstChild);
-}
-
-function sendChat() {
-  const inp = document.getElementById('chatInput');
-  const txt = inp.value.trim();
-  if (!txt) return;
-  const addr  = walletAddress ? walletAddress.slice(0,6)+'…'+walletAddress.slice(-4) : 'You';
-  const color = '#32ff7e';
-  appendChatMsg(addr,'','',color,txt,'now');
-  inp.value='';
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   EVENTS FEED
-═══════════════════════════════════════════════════════════════ */
-const EVENT_TEMPLATES = [
-  t=>`🚀 <strong>${t.name}</strong> just launched!`,
-  t=>`💰 Whale bought <strong>8.2 SOL</strong> of <strong>$${t.symbol}</strong>`,
-  t=>`📈 <strong>$${t.symbol}</strong> up <strong>+${(Math.random()*40+5).toFixed(0)}%</strong> in 1h`,
-  t=>`🔥 <strong>$${t.symbol}</strong> volume spiking!`,
-  t=>`🎓 <strong>$${t.symbol}</strong> approaching graduation`,
-  t=>`💎 New holder milestone: <strong>${t.name}</strong> hits ${(Math.floor(Math.random()*5)+1)*1000} holders`,
-];
-let eventItems=[];
-
-function buildEvents() {
-  const el = document.getElementById('eventList');
-  if (!el) return;
-  eventItems=[];
-  // Seed 3 events
-  for (let i=0;i<3;i++) addEvent();
-  setInterval(addEvent, 6000+Math.random()*4000);
-}
-
-function addEvent() {
-  const el = document.getElementById('eventList');
-  if (!el) return;
-  const tok = allTokens[Math.floor(Math.random()*allTokens.length)];
-  const tmpl = EVENT_TEMPLATES[Math.floor(Math.random()*EVENT_TEMPLATES.length)];
-  const icons=['🚀','💰','📈','🔥','🎓','💎'];
-  const icon  = icons[Math.floor(Math.random()*icons.length)];
-  const html  = tmpl(tok);
-  const mins  = Math.floor(Math.random()*59+1);
-
-  const item = document.createElement('div');
-  item.className='event-item';
-  item.style.animation='msgIn 0.3s ease';
-  item.innerHTML=`<span class="event-icon">${icon}</span><span class="event-text">${html}</span><span class="event-time">${mins}m ago</span>`;
-  el.prepend(item);
-  while(el.children.length>4) el.removeChild(el.lastChild);
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   CREATE TOKEN
-═══════════════════════════════════════════════════════════════ */
-function openCreateModal()  { document.getElementById('createOverlay').classList.add('open'); document.body.style.overflow='hidden'; }
-function closeCreateModal() { document.getElementById('createOverlay').classList.remove('open'); document.body.style.overflow=''; }
-
-function previewImage(inp) {
-  const file=inp.files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    const img=document.getElementById('imagePreview');
-    img.src=e.target.result; img.style.display='block';
-    document.getElementById('uploadPlaceholder').style.display='none';
-  };
-  reader.readAsDataURL(file);
-}
-
-function createToken() {
-  const name   = document.getElementById('createName').value.trim();
-  const symbol = document.getElementById('createSymbol').value.trim().toUpperCase();
-  if (!name||!symbol) { showNotif('Name and symbol are required','error'); return; }
-
-  const emojis=['🚀','🐶','🐸','💎','🔥','🌙','⚡','💀','🦊','🐻','🦁','🐯','🍀','🎯'];
-  const emoji = emojis[Math.floor(Math.random()*emojis.length)];
-  const newToken = {
-    id: 'tok_'+Date.now(),
-    name, symbol, emoji,
-    description: document.getElementById('createDesc').value.trim(),
-    twitter:  document.getElementById('createTwitter').value.trim(),
-    telegram: document.getElementById('createTelegram').value.trim(),
-    website:  document.getElementById('createWebsite').value.trim(),
-    virtual_sol_reserves:30e9, virtual_token_reserves:1073e12,
-    real_sol_reserves:0, total_supply:1e15,
-    market_cap:0, volume_24h:0, holders:0, graduated:false,
-    created_at: new Date().toISOString(),
-  };
-  allTokens.unshift(newToken);
-  allComments[newToken.id]=[];
-  closeCreateModal();
-  showNotif(`🚀 ${name} launched successfully!`,'success');
-  ['createName','createDesc','createTwitter','createTelegram','createWebsite'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('createSymbol').value='';
-  document.getElementById('imagePreview').style.display='none';
-  document.getElementById('uploadPlaceholder').style.display='block';
-  loadTokens();
-  setTimeout(()=>openToken(newToken.id),400);
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   FILTERS & SEARCH
-═══════════════════════════════════════════════════════════════ */
-function setFilter(f, el) {
-  currentFilter=f;
-  document.querySelectorAll('.f-btn').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
-  filterTokens();
-}
-function filterTokens() {
-  const q=document.getElementById('searchInput').value.toLowerCase();
-  let filtered=[...allTokens];
-  if (q) filtered=filtered.filter(t=>t.name.toLowerCase().includes(q)||t.symbol.toLowerCase().includes(q));
-  if      (currentFilter==='new')        filtered=filtered.filter(t=>new Date()-new Date(t.created_at)<3600000);
-  else if (currentFilter==='trending')   filtered=[...filtered].sort((a,b)=>(b.volume_24h||0)-(a.volume_24h||0));
-  else if (currentFilter==='graduating') filtered=filtered.filter(t=>(t.real_sol_reserves/85*100)>=70);
-  renderTokens(filtered);
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   WALLET — MetaMask + Phantom
-═══════════════════════════════════════════════════════════════ */
-document.addEventListener('click', e=>{
-  if (!e.target.closest('#walletBtn')&&!e.target.closest('#walletMenu'))
-    document.getElementById('walletMenu').classList.remove('open');
-});
-
-function toggleWalletMenu() {
-  if (walletAddress) { showWalletInfoModal(); return; }
-  detectWallets();
-  document.getElementById('walletMenu').classList.toggle('open');
-}
-
-function detectWallets() {
-  const hasPhantom  = !!(window.solana?.isPhantom||window.phantom?.solana);
-  const hasMetaMask = !!(window.ethereum);
-  const pBtn=document.getElementById('phantomWalletBtn');
-  const mBtn=document.getElementById('mmWalletBtn');
-  if (pBtn) {
-    const s=pBtn.querySelector('.wallet-status');
-    if(s){s.textContent=hasPhantom?'● Detected':'○ Not installed';s.style.color=hasPhantom?'var(--green)':'var(--muted)';}
-  }
-  if (mBtn) {
-    const s=mBtn.querySelector('.wallet-status');
-    if(s){s.textContent=hasMetaMask?'● Detected':'○ Not installed';s.style.color=hasMetaMask?'var(--green)':'var(--muted)';}
-  }
-}
-
-function setWalletUI(icon, addr, balance, unit) {
-  const short = unit==='ETH' ? addr.slice(0,6)+'…'+addr.slice(-4) : addr.slice(0,4)+'…'+addr.slice(-4);
-  document.getElementById('walletBtn').innerHTML =
-    `<span>${icon} ${short}</span><span style="font-size:9px;background:var(--green-dim);color:var(--green);padding:1px 5px;border-radius:3px;margin-left:4px">●</span>`;
-  const balText = balance ? parseFloat(balance).toFixed(4)+' '+unit : '– '+unit;
-  const pBal=document.getElementById('panelBalance');
-  const mBal=document.getElementById('mainBalance');
-  if(pBal) pBal.textContent=balText;
-  if(mBal) mBal.textContent=balText;
-  updateTradeButton();
-}
-
-function disconnectWallet() {
-  if (walletType==='phantom'&&window.solana?.disconnect) window.solana.disconnect().catch(()=>{});
-  walletAddress=null; walletBalance=0; walletType=null;
-  document.getElementById('walletBtn').innerHTML='⬡ Connect Wallet';
-  const pBal=document.getElementById('panelBalance');
-  const mBal=document.getElementById('mainBalance');
-  if(pBal) pBal.textContent='Connect wallet';
-  if(mBal) mBal.textContent='– SOL';
-  document.getElementById('walletMenu').classList.remove('open');
-  closeWalletInfoModal();
-  updateTradeButton();
-  showNotif('Wallet disconnected','error');
-}
-
-async function connectPhantom() {
-  document.getElementById('walletMenu').classList.remove('open');
-  const provider = window.phantom?.solana ?? window.solana;
-  if (!provider?.isPhantom) {
-    showNotif('Phantom not installed — opening download page…','error');
-    window.open('https://phantom.app/download','_blank'); return;
-  }
-  try {
-    let resp;
-    if (provider.isConnected&&provider.publicKey) resp={publicKey:provider.publicKey};
-    else resp=await provider.connect();
-    walletAddress=resp.publicKey.toString();
-    walletType='phantom';
-    try {
-      const res=await fetch('https://api.mainnet-beta.solana.com',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'getBalance',params:[walletAddress]})});
-      const j=await res.json();
-      walletBalance=j.result?.value!=null?(j.result.value/1e9).toFixed(4):'–';
-    } catch { walletBalance='–'; }
-    setWalletUI('👻',walletAddress,walletBalance,'SOL');
-    showNotif('👻 Phantom connected: '+walletAddress.slice(0,4)+'…'+walletAddress.slice(-4),'success');
-    provider.on('disconnect',()=>disconnectWallet());
-    provider.on('accountChanged',pk=>{ if(!pk){disconnectWallet();return;} walletAddress=pk.toString(); setWalletUI('👻',walletAddress,'–','SOL'); });
-  } catch(err) {
-    if(err.code===4001) showNotif('Connection rejected','error');
-    else showNotif('Phantom error: '+(err.message||'Unknown'),'error');
-  }
-}
-
-async function connectMetaMask() {
-  document.getElementById('walletMenu').classList.remove('open');
-  const provider=window.ethereum;
-  if (!provider) {
-    showNotif('MetaMask not installed — opening download page…','error');
-    window.open('https://metamask.io/download/','_blank'); return;
-  }
-  try {
-    const accounts=await provider.request({method:'eth_requestAccounts'});
-    if (!accounts?.length){showNotif('No accounts returned','error');return;}
-    walletAddress=accounts[0]; walletType='metamask';
-    try {
-      const balHex=await provider.request({method:'eth_getBalance',params:[walletAddress,'latest']});
-      walletBalance=(parseInt(balHex,16)/1e18).toFixed(4);
-    } catch { walletBalance='0'; }
-    let chainName='EVM';
-    try {
-      const cid=await provider.request({method:'eth_chainId'});
-      const chains={'0x1':'Ethereum','0x89':'Polygon','0x38':'BSC','0xa':'Optimism','0xa4b1':'Arbitrum','0x2105':'Base'};
-      chainName=chains[cid]||'Chain '+parseInt(cid,16);
-    } catch {}
-    setWalletUI('🦊',walletAddress,walletBalance,'ETH');
-    showNotif(`🦊 MetaMask (${chainName}): ${walletAddress.slice(0,6)}…${walletAddress.slice(-4)}`,'success');
-    provider.on('accountsChanged',accs=>{
-      if(!accs?.length){disconnectWallet();return;}
-      walletAddress=accs[0];
-      provider.request({method:'eth_getBalance',params:[walletAddress,'latest']})
-        .then(h=>{walletBalance=(parseInt(h,16)/1e18).toFixed(4);setWalletUI('🦊',walletAddress,walletBalance,'ETH');})
-        .catch(()=>setWalletUI('🦊',walletAddress,'–','ETH'));
-    });
-    provider.on('chainChanged',()=>{ provider.request({method:'eth_getBalance',params:[walletAddress,'latest']}).then(h=>{walletBalance=(parseInt(h,16)/1e18).toFixed(4);setWalletUI('🦊',walletAddress,walletBalance,'ETH');}).catch(()=>{}); });
-    provider.on('disconnect',()=>disconnectWallet());
-  } catch(err) {
-    if(err.code===4001) showNotif('Connection rejected','error');
-    else if(err.code===-32002) showNotif('MetaMask request pending — check extension','error');
-    else showNotif('MetaMask error: '+(err.message||'Unknown'),'error');
-  }
-}
-
-function showWalletInfoModal() {
-  document.getElementById('walletInfoModal').classList.add('open');
-  const unit=walletType==='metamask'?'ETH':'SOL';
-  const icon=walletType==='metamask'?'🦊 MetaMask':'👻 Phantom';
-  document.getElementById('wiAddress').textContent    = walletAddress||'';
-  document.getElementById('wiBalance').textContent    = parseFloat(walletBalance||0).toFixed(4)+' '+unit;
-  document.getElementById('wiWalletType').textContent = icon;
-}
-function closeWalletInfoModal() { document.getElementById('walletInfoModal').classList.remove('open'); }
-function connectWallet() { toggleWalletMenu(); }
-
-/* ═══════════════════════════════════════════════════════════════
-   MODAL CLOSE ON OVERLAY CLICK
-═══════════════════════════════════════════════════════════════ */
-document.getElementById('tokenModal').addEventListener('click',function(e){ if(e.target===this)closeModal(); });
-document.getElementById('createOverlay').addEventListener('click',function(e){ if(e.target===this)closeCreateModal(); });
-
-/* ═══════════════════════════════════════════════════════════════
-   UTILITY
-═══════════════════════════════════════════════════════════════ */
-function formatUSD(n) {
-  if(n>=1e6) return '$'+(n/1e6).toFixed(1)+'M';
-  if(n>=1e3) return '$'+(n/1e3).toFixed(1)+'K';
-  return '$'+parseFloat(n).toFixed(2);
-}
-function formatSOL(n) { return parseFloat(n||0).toFixed(3); }
-function formatNum(n) {
-  if(n>=1e9) return (n/1e9).toFixed(2)+'B';
-  if(n>=1e6) return (n/1e6).toFixed(2)+'M';
-  if(n>=1e3) return (n/1e3).toFixed(2)+'K';
-  return parseFloat(n).toFixed(0);
-}
-function timeAgo(dateStr) {
-  if(!dateStr) return '';
-  const diff=(Date.now()-new Date(dateStr))/1000;
-  if(diff<60)    return Math.floor(diff)+'s ago';
-  if(diff<3600)  return Math.floor(diff/60)+'m ago';
-  if(diff<86400) return Math.floor(diff/3600)+'h ago';
-  return Math.floor(diff/86400)+'d ago';
-}
-function escapeHTML(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function showNotif(msg, type='success') {
-  const el=document.getElementById('notif');
-  el.className='notif show '+type;
-  el.innerHTML=(type==='success'?'✅ ':'❌ ')+msg;
-  clearTimeout(el._timer);
-  el._timer=setTimeout(()=>el.classList.remove('show'),4000);
-}
-function showSection() {}
-
-/* ═══════════════════════════════════════════════════════════════
-   INIT
-═══════════════════════════════════════════════════════════════ */
-(function init() {
-  seedTrades();
-  initMainChart();
-  initChat();
-  loadTokens();
-  loadLiveTrades();
-})();
-</script>
+    <script>
+        // CONFIGURATION : Remplace cette adresse par TON wallet qui va centraliser les dépôts
+        const PLATFORM_DEPOSIT_WALLET = "7XkG1...MettezVotreAdresseIci..."; 
+        
+        // Connexion RPC publique Solana Mainnet-Beta
+        const connection = new solanaWeb3.Connection("https://api.mainnet-beta.solana.com", "confirmed");
+
+        let walletConnected = false;
+        let userWalletAddress = null;
+
+        // Gérer le clic sur le bouton principal du Header
+        function toggleWalletAction() {
+            if (walletConnected) {
+                document.getElementById('modalWalletAddress').textContent = userWalletAddress;
+                openModal('walletInfoModal');
+            } else {
+                connectPhantom();
+            }
+        }
+
+        // Connexion à l'extension Phantom
+        async function connectPhantom() {
+            if (!window.solana || !window.solana.isPhantom) {
+                alert("Erreur : L'extension Phantom n'est pas installée sur votre navigateur.");
+                return;
+            }
+
+            try {
+                const response = await window.solana.connect();
+                userWalletAddress = response.publicKey.toString();
+                walletConnected = true;
+                
+                console.log("Connecté à Phantom. Adresse :", userWalletAddress);
+                
+                // Mettre à jour l'UI
+                const shortAddr = userWalletAddress.slice(0,4) + '…' + userWalletAddress.slice(-4);
+                document.getElementById('walletBtn').innerHTML = `<span>👻 ${shortAddr}</span>`;
+                
+                // Charger le solde réel de l'utilisateur
+                await updateWalletBalance();
+
+            } catch (err) {
+                console.error("Connexion refusée ou échouée :", err);
+            }
+        }
+
+        // Déconnexion
+        async function disconnectPhantom() {
+            if (window.solana) {
+                await window.solana.disconnect();
+                walletConnected = false;
+                userWalletAddress = null;
+                document.getElementById('walletBtn').innerHTML = "👻 Connect Phantom";
+                document.getElementById('modalWalletBalance').textContent = "0.0000 SOL";
+                closeModal('walletInfoModal');
+                alert("Wallet déconnecté.");
+            }
+        }
+
+        // Récupérer le solde on-chain réel
+        async function updateWalletBalance() {
+            if (!userWalletAddress) return;
+            try {
+                const pubKey = new solanaWeb3.PublicKey(userWalletAddress);
+                const balanceLamports = await connection.getBalance(pubKey);
+                const balanceSol = balanceLamports / solanaWeb3.LAMPORTS_PER_SOL;
+                
+                // Injection dans les éléments de la modale
+                document.getElementById('modalWalletBalance').textContent = balanceSol.toFixed(4) + " SOL";
+            } catch (err) {
+                console.error("Impossible de récupérer le solde :", err);
+            }
+        }
+
+        // PHASE 1 : Envoi de vrais SOL du portefeuille de l'utilisateur vers ton adresse de plateforme
+        async function depositSol() {
+            if (!walletConnected || !userWalletAddress) {
+                alert("Veuillez d'abord connecter votre wallet Phantom.");
+                return;
+            }
+
+            const amountInput = document.getElementById('depositAmount').value;
+            const amount = parseFloat(amountInput);
+
+            if (isNaN(amount) || amount <= 0) {
+                alert("Veuillez entrer un montant valide de SOL.");
+                return;
+            }
+
+            const statusTxt = document.getElementById('depositStatus');
+            statusTxt.style.color = "var(--primary)";
+            statusTxt.textContent = "Création de la transaction...";
+
+            try {
+                const fromPubkey = window.solana.publicKey;
+                const toPubkey = new solanaWeb3.PublicKey(PLATFORM_DEPOSIT_WALLET);
+
+                // 1. Définir l'instruction de transfert basique
+                const transaction = new solanaWeb3.Transaction().add(
+                    solanaWeb3.SystemProgram.transfer({
+                        fromPubkey: fromPubkey,
+                        toPubkey: toPubkey,
+                        lamports: amount * solanaWeb3.LAMPORTS_PER_SOL
+                    })
+                );
+
+                transaction.feePayer = fromPubkey;
+                
+                // 2. Récupérer le blockhash le plus récent
+                statusTxt.textContent = "Récupération du blockhash Solana...";
+                const { blockhash } = await connection.getLatestBlockhash();
+                transaction.recentBlockhash = blockhash;
+
+                // 3. Demander la signature et approuver via Phantom
+                statusTxt.textContent = "En attente d'approbation dans Phantom...";
+                const signedTransaction = await window.solana.signTransaction(transaction);
+                
+                // 4. Envoyer la transaction brute au réseau
+                statusTxt.textContent = "Envoi de la transaction sur la blockchain...";
+                const signature = await connection.sendRawTransaction(signedTransaction.serialize());
+
+                // 5. Confirmer la transaction
+                statusTxt.textContent = "Validation en cours (Blockchain confirmation)...";
+                await connection.confirmTransaction(signature, "confirmed");
+
+                statusTxt.style.color = "var(--green)";
+                statusTxt.textContent = `Succès ! Dépôt de ${amount} SOL confirmé. Sig: ${signature.slice(0,8)}...`;
+                
+                // Optionnel : Ici tu devras lier l'appel API Supabase pour créditer le compte
+                alert(`Dépôt validé ! ${amount} SOL ont été envoyés vers votre adresse de stockage.`);
+                
+                // Mise à jour visuelle des soldes
+                await updateWalletBalance();
+                closeModal('depositModal');
+
+            } catch (err) {
+                console.error("Erreur durant le dépôt :", err);
+                statusTxt.style.color = "var(--red)";
+                statusTxt.textContent = "Erreur ou annulation du dépôt.";
+            }
+        }
+
+        // Helpers Modales
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function openDepositModal() {
+            document.getElementById('depositStatus').textContent = "";
+            openModal('depositModal');
+        }
+
+        // Fonction Mock Purement visuelle pour l'interface
+        function mockTrade(type) {
+            alert(`${type} : Cette action nécessite la configuration de ton moteur de trading interne rattaché à Supabase.`);
+        }
+    </script>
 </body>
 </html>
