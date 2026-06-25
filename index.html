@@ -831,26 +831,24 @@
   </ul>
   <div class="nav-right">
     <button class="btn btn-outline btn-primary" onclick="openCreateModal()">+ Launch Token</button>
-    <button class="btn btn-outline" id="walletBtn" onclick="connectWallet()">Connect Wallet</button>
+    <div style="position:relative">
+      <button class="btn btn-outline" id="walletBtn" onclick="toggleWalletMenu()">Connect Wallet</button>
+      <div id="walletMenu" style="display:none;position:absolute;top:44px;right:0;background:var(--bg2);border:1px solid var(--border);border-radius:10px;min-width:200px;z-index:999;overflow:hidden">
+        <div style="padding:8px 12px;font-size:11px;color:#555;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border)">Choose wallet</div>
+        <button onclick="connectPhantom()" style="width:100%;display:flex;align-items:center;gap:10px;padding:12px 14px;background:none;border:none;color:var(--text);cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:500;transition:background 0.15s" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='none'">
+          <img src="https://phantom.app/img/phantom-logo.png" width="22" height="22" style="border-radius:6px" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%234E44CE%22/><text x=%2250%25%22 y=%2260%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 font-size=%2218%22>👻</text></svg>'"> Phantom
+        </button>
+        <button onclick="connectMetaMask()" style="width:100%;display:flex;align-items:center;gap:10px;padding:12px 14px;background:none;border:none;border-top:1px solid var(--border);color:var(--text);cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:500;transition:background 0.15s" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='none'">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" width="22" height="22"> MetaMask <span style="font-size:10px;color:#888;margin-left:4px">(EVM)</span>
+        </button>
+      </div>
+    </div>
   </div>
 </nav>
 
-<!-- TICKER BAR -->
-<div class="ticker-bar">
-  <div class="ticker-inner" id="tickerInner">
-    <span class="ticker-item"><span class="sym">DOGE</span> $0.00034 <span class="up">+12.4%</span></span>
-    <span class="ticker-item"><span class="sym">PEPE</span> $0.00091 <span class="dn">-3.2%</span></span>
-    <span class="ticker-item"><span class="sym">WIF</span> $0.00512 <span class="up">+8.7%</span></span>
-    <span class="ticker-item"><span class="sym">BONK</span> $0.00002 <span class="up">+5.1%</span></span>
-    <span class="ticker-item"><span class="sym">SAMO</span> $0.00128 <span class="dn">-1.8%</span></span>
-    <span class="ticker-item"><span class="sym">MEME</span> $0.00445 <span class="up">+22.3%</span></span>
-    <span class="ticker-item"><span class="sym">DOGE</span> $0.00034 <span class="up">+12.4%</span></span>
-    <span class="ticker-item"><span class="sym">PEPE</span> $0.00091 <span class="dn">-3.2%</span></span>
-    <span class="ticker-item"><span class="sym">WIF</span> $0.00512 <span class="up">+8.7%</span></span>
-    <span class="ticker-item"><span class="sym">BONK</span> $0.00002 <span class="up">+5.1%</span></span>
-    <span class="ticker-item"><span class="sym">SAMO</span> $0.00128 <span class="dn">-1.8%</span></span>
-    <span class="ticker-item"><span class="sym">MEME</span> $0.00445 <span class="up">+22.3%</span></span>
-  </div>
+<!-- TICKER BAR — filled dynamically from real tokens -->
+<div class="ticker-bar" id="tickerBar" style="display:none">
+  <div class="ticker-inner" id="tickerInner"></div>
 </div>
 
 <!-- HERO -->
@@ -1126,6 +1124,7 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // ─────────────────────────────────────
 let walletAddress = null;
 let walletBalance = 0;
+let walletType = null; // 'phantom' | 'metamask'
 let currentToken = null;
 let tradeMode = 'buy';
 let currentFilter = 'all';
@@ -1135,57 +1134,121 @@ let chartSeries = null;
 let chartPeriod = '1m';
 
 // ─────────────────────────────────────
-// WALLET
+// WALLET MENU
 // ─────────────────────────────────────
-async function connectWallet() {
+function toggleWalletMenu() {
   if (walletAddress) {
-    walletAddress = null;
-    walletBalance = 0;
-    document.getElementById('walletBtn').textContent = 'Connect Wallet';
-    document.getElementById('panelBalance').textContent = 'Connect wallet';
-    document.getElementById('tradeSubmitBtn').textContent = 'Connect Wallet to Trade';
-    showNotif('Wallet disconnected', 'error');
+    disconnectWallet();
     return;
   }
+  const menu = document.getElementById('walletMenu');
+  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
 
+// Close menu when clicking outside
+document.addEventListener('click', function(e) {
+  const menu = document.getElementById('walletMenu');
+  if (!e.target.closest('#walletBtn') && !e.target.closest('#walletMenu')) {
+    if (menu) menu.style.display = 'none';
+  }
+});
+
+function disconnectWallet() {
+  walletAddress = null;
+  walletBalance = 0;
+  walletType = null;
+  document.getElementById('walletBtn').textContent = 'Connect Wallet';
+  document.getElementById('panelBalance').textContent = 'Connect wallet';
+  updateTradeButton();
+  showNotif('Wallet disconnected', 'error');
+}
+
+async function connectPhantom() {
+  document.getElementById('walletMenu').style.display = 'none';
   if (!window.solana || !window.solana.isPhantom) {
-    showNotif('Phantom wallet not found. Install it at phantom.app', 'error');
+    showNotif('Phantom not found — install it at phantom.app', 'error');
     window.open('https://phantom.app', '_blank');
     return;
   }
-
   try {
     const resp = await window.solana.connect();
     walletAddress = resp.publicKey.toString();
+    walletType = 'phantom';
     const short = walletAddress.slice(0,4)+'...'+walletAddress.slice(-4);
-    document.getElementById('walletBtn').textContent = short;
-
-    // Get balance
-    const conn = new (await import('https://unpkg.com/@solana/web3.js@1/lib/index.iife.js')).Connection(
-      'https://api.devnet.solana.com', 'confirmed'
-    );
-    // Simplified — just show connected
-    walletBalance = 0;
-    document.getElementById('panelBalance').textContent = `${walletBalance} SOL`;
+    document.getElementById('walletBtn').textContent = '👻 ' + short;
+    document.getElementById('panelBalance').textContent = '– SOL';
     updateTradeButton();
-    showNotif(`Connected: ${short}`, 'success');
+    showNotif('👻 Phantom connected: ' + short, 'success');
   } catch(e) {
     showNotif('Connection cancelled', 'error');
   }
 }
+
+async function connectMetaMask() {
+  document.getElementById('walletMenu').style.display = 'none';
+  if (!window.ethereum) {
+    showNotif('MetaMask not found — install it at metamask.io', 'error');
+    window.open('https://metamask.io', '_blank');
+    return;
+  }
+  try {
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    walletAddress = accounts[0];
+    walletType = 'metamask';
+    const short = walletAddress.slice(0,6)+'...'+walletAddress.slice(-4);
+    document.getElementById('walletBtn').textContent = '🦊 ' + short;
+    // Get ETH balance
+    const balHex = await window.ethereum.request({ method: 'eth_getBalance', params: [walletAddress, 'latest'] });
+    const balEth = (parseInt(balHex, 16) / 1e18).toFixed(4);
+    walletBalance = balEth;
+    document.getElementById('panelBalance').textContent = balEth + ' ETH';
+    updateTradeButton();
+    showNotif('🦊 MetaMask connected: ' + short, 'success');
+    // Listen for account changes
+    window.ethereum.on('accountsChanged', (accs) => {
+      if (accs.length === 0) disconnectWallet();
+      else { walletAddress = accs[0]; document.getElementById('walletBtn').textContent = '🦊 '+accs[0].slice(0,6)+'...'+accs[0].slice(-4); }
+    });
+  } catch(e) {
+    showNotif('Connection cancelled or rejected', 'error');
+  }
+}
+
+// Keep old connectWallet for backward compat
+function connectWallet() { toggleWalletMenu(); }
 
 function updateTradeButton() {
   const btn = document.getElementById('tradeSubmitBtn');
   if (!walletAddress) {
     btn.textContent = 'Connect Wallet to Trade';
     btn.disabled = false;
-    btn.onclick = connectWallet;
+    btn.onclick = toggleWalletMenu;
   } else {
     btn.textContent = tradeMode === 'buy' ? '🟢 Buy' : '🔴 Sell';
     btn.disabled = false;
     btn.onclick = executeTrade;
   }
   btn.className = `trade-submit ${tradeMode}`;
+}
+
+// ─────────────────────────────────────
+// TICKER — built from real tokens
+// ─────────────────────────────────────
+function buildTicker(tokens) {
+  const bar = document.getElementById('tickerBar');
+  const inner = document.getElementById('tickerInner');
+  if (!tokens || tokens.length === 0) { bar.style.display = 'none'; return; }
+  // Duplicate for seamless loop
+  const items = [...tokens, ...tokens].map(t => {
+    const price = t.total_supply ? (t.market_cap||0) / t.total_supply : 0;
+    const priceStr = price > 0 ? '$' + price.toExponential(2) : '$0';
+    const vol = t.volume_24h || 0;
+    const cls = vol > 0 ? 'up' : 'dn';
+    const sign = vol > 0 ? '+' : '';
+    return `<span class="ticker-item"><span class="sym">$${t.symbol}</span> ${priceStr} <span class="${cls}">${sign}${vol.toFixed(2)} SOL</span></span>`;
+  }).join('');
+  inner.innerHTML = items;
+  bar.style.display = 'block';
 }
 
 // ─────────────────────────────────────
@@ -1196,6 +1259,7 @@ async function loadTokens() {
   if (error) { console.error(error); return; }
   allTokens = data || [];
   renderTokens(allTokens);
+  buildTicker(allTokens);
   updateStats();
 }
 
